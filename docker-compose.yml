@@ -1,0 +1,37 @@
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: nextcloud
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD: nextcloud
+    volumes:
+      - db-data:/var/lib/mysql
+
+  nextcloud:
+    image: nextcloud:33-apache
+    ports:
+      - "8088:80"
+    environment:
+      MYSQL_HOST: db
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD: nextcloud
+      NEXTCLOUD_ADMIN_USER: admin
+      NEXTCLOUD_ADMIN_PASSWORD: admin
+    volumes:
+      - nextcloud-data:/var/www/html
+      - ./appinfo:/var/www/html/custom_apps/drawio/appinfo:ro
+      - ./lib:/var/www/html/custom_apps/drawio/lib
+      - ./js:/var/www/html/custom_apps/drawio/js:ro
+      - ./css:/var/www/html/custom_apps/drawio/css:ro
+      - ./img:/var/www/html/custom_apps/drawio/img:ro
+      - ./l10n:/var/www/html/custom_apps/drawio/l10n:ro
+      - ./templates:/var/www/html/custom_apps/drawio/templates:ro
+    depends_on:
+      - db
+
+volumes:
+  db-data:
+  nextcloud-data:
