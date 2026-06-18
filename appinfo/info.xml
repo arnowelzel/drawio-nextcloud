@@ -29,7 +29,7 @@
     <website>https://github.com/arnowelzel/drawio-nextcloud</website>
     <bugs>https://github.com/arnowelzel/drawio-nextcloud/issues</bugs>
     <repository type="git">https://github.com/arnowelzel/drawio-nextcloud.git</repository>
-    <screenshot small-thumbnail="https://raw.githubusercontent.com/arnowelzel/drawio-nextcloud/refs/heads/main/screenshots/drawio_integration_sm.png">https://raw.githubusercontent.com/arnowelzel/drawio-nextcloud/refs/heads/main/screenshots/drawio_integration_sm.png</screenshot>
+    <screenshot small-thumbnail="https://raw.githubusercontent.com/arnowelzel/drawio-nextcloud/refs/heads/main/screenshots/drawio_integration_sm.png">https://raw.githubusercontent.com/arnowelzel/drawio-nextcloud/refs/heads/main/screenshots/drawio_integration.png</screenshot>
     <dependencies>
         <nextcloud min-version="33" max-version="34"/>
     </dependencies>
