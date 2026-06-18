@@ -4,6 +4,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -58,6 +61,6 @@ jobs:
         sleep 60
         echo "${{ secrets.NEXTCLOUD_KEY }}" > drawio.key
         export signature=`openssl dgst -sha512 -sign drawio.key ${{ steps.vars.outputs.tar_file_name }} | openssl base64`
-        export requestJSON="{\"download\":\"https://github.com/jgraph/drawio-nextcloud/releases/download/${GITHUB_REF##*/}/drawio-${GITHUB_REF##*/}.tar.gz\", \"signature\": \"${signature//$'\n'/\\n}\"}"
+        export requestJSON="{\"download\":\"https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF##*/}/drawio-${GITHUB_REF##*/}.tar.gz\", \"signature\": \"${signature//$'\n'/\\n}\"}"
         curl -X POST https://apps.nextcloud.com/api/v1/apps/releases -H "Authorization: Token ${{ secrets.NEXTCLOUD_TOKEN }}" -H "Content-Type: application/json" -d "${requestJSON}"
 
