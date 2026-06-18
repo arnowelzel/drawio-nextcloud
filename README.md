@@ -4,11 +4,9 @@
 
 This Nextcloud app integrates the [draw.io](https://app.diagrams.net) diagram editor.
 
-_Note: The new maintainer of the app will be [Arno Welzel](https://github.com/arnowelzel/) and the app
-will get further updates in the future. However as of 2026-06-18 this change still in progress
-and not finished yet. Before the change is finished, no updates will be possible. Feel free to open
-new issues or pull requests. They will be addressed as soon as the maintenance of the application is
-offically transferred._
+_Note: Due to the transfer of the ownership and maintenance of the app from JGraph Ltd to
+Arno Welzel in June 2026, older versions got removed in the Nextcloud App store, since
+the private key and signature for the app had to be renewed.
 
 ## License
 
