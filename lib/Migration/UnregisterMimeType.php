@@ -24,7 +24,7 @@ class UnregisterMimeType extends MimeTypeMigration
 {
     public function getName()
     {
-        return 'Unregister MIME type for Diagramming';
+        return 'Unregister MIME type for Draw.io';
     }
 
     private function unregisterForExistingFiles()

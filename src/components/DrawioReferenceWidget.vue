@@ -48,10 +48,10 @@ export default {
     },
     computed: {
         name() {
-            return this.richObject?.name ?? t('drawio', 'Diagram')
+            return this.richObject?.name ?? t('drawio', 'Draw.io diagram')
         },
         description() {
-            return t('drawio', 'Edit diagram')
+            return t('drawio', 'Open in Draw.io')
         },
         previewUrl() {
             return this.richObject?.previewUrl ?? null

@@ -91,13 +91,22 @@ class Application extends App implements IBootstrap {
         $currentNcVersion = $container->get(\OCP\ServerVersion::class)->getVersionString();
         $storedNcVersion = $appConfig->GetNcVersion();
 
-        if ($storedNcVersion === $currentNcVersion) {
+        $needsRepair = ($storedNcVersion !== $currentNcVersion);
+
+        if (!$needsRepair) {
+            $iconTarget = \OC::$SERVERROOT . '/core/img/filetypes/drawio.svg';
+            if (!file_exists($iconTarget)) {
+                $needsRepair = true;
+            }
+        }
+
+        if (!$needsRepair) {
             return;
         }
 
         try {
             $logger = $container->get(LoggerInterface::class);
-            $logger->info('Diagramming: Re-registering MIME type assets (NC version: ' .
+            $logger->info('Draw.io: Re-registering MIME type assets (NC version: ' .
                 $storedNcVersion . ' -> ' . $currentNcVersion . ')', ['app' => 'drawio']);
 
             $mimeTypeLoader = $container->get(IMimeTypeLoader::class);
@@ -118,10 +127,10 @@ class Application extends App implements IBootstrap {
             $mime->run($output);
             $appConfig->SetNcVersion($currentNcVersion);
 
-            $logger->info('Diagramming: MIME type assets re-registered successfully', ['app' => 'drawio']);
+            $logger->info('Draw.io: MIME type assets re-registered successfully', ['app' => 'drawio']);
         } catch (\Exception $e) {
             $logger = $container->get(LoggerInterface::class);
-            $logger->warning('Diagramming: Failed to re-register MIME type assets: ' . $e->getMessage(),
+            $logger->warning('Draw.io: Failed to re-register MIME type assets: ' . $e->getMessage(),
                 ['app' => 'drawio', 'exception' => $e]);
         }
     }

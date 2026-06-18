@@ -22,7 +22,7 @@ class Section implements IIconSection {
 	}
 
 	public function getName() {
-		return $this->l10n->t('Diagramming');
+		return $this->l10n->t('Draw.io');
 	}
 
 	public function getPriority() {

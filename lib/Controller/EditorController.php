@@ -285,7 +285,7 @@ class EditorController extends Controller
                         'owner' => $file->getOwner()->getUID(),
                         'etag' => $file->getEtag(),
                         'mtime' => $file->getMTime(),
-                        'created' => $file->getCreationTime() ?: $file->getUploadTime(),
+                        'created' => $file->getCreationTime() + $file->getUploadTime(),
                         'shareToken' => $shareToken,
                         'versionsEnabled' => empty($shareToken) && isset($this->versionManager),
                         'ver' => 2,
@@ -358,7 +358,7 @@ class EditorController extends Controller
                     'owner' => $file->getOwner()->getUID(),
                     'etag' => $file->getEtag(),
                     'mtime' => $file->getMTime(),
-                    'created' => $file->getCreationTime() ?: $file->getUploadTime(),
+                    'created' => $file->getCreationTime() + $file->getUploadTime(),
                     'shareToken' => $shareToken,
                     'versionsEnabled' => empty($shareToken) && isset($this->versionManager),
                     'ver' => 2,
@@ -429,29 +429,7 @@ class EditorController extends Controller
                             return new DataResponse([ 'message' => $this->trans->t('The file you are working on was updated in the meantime.')], Http::STATUS_CONFLICT);
                         }
 
-						try {
-                            $file->putContent($fileContents);
-                        } catch (LockedException $e) {
-                            throw $e;
-                        } catch (ForbiddenException $e) {
-                            throw $e;
-                        } catch (GenericFileException $e) {
-                            throw $e;
-                        } catch (\Exception $e) {
-                            // Post-save hooks (e.g. Activity, Deck) may fail even though
-                            // the file was written successfully. Check if the file was
-                            // actually saved by comparing etags, and if so treat as success.
-                            clearstatcache();
-                            $newEtag = $file->getEtag();
-                            if ($newEtag !== $etag) {
-                                $this->logger->warning('Post-save hook error (file was saved successfully): ' . $e->getMessage(),
-                                    ['app' => $this->appName, 'exception' => $e]);
-                                $newSize = $file->getSize();
-                                $newMtime = $file->getMTime();
-                                return new DataResponse(['etag' => $newEtag, 'size' => $newSize, 'mtime' => $newMtime], Http::STATUS_OK);
-                            }
-                            throw $e;
-                        }
+						$file->putContent($fileContents);
                         // Clear statcache
                         clearstatcache();
                         // Get new eTag
@@ -647,7 +625,7 @@ class EditorController extends Controller
         if (empty($drawioUrl))
         {
             $this->logger->error("drawioUrl is empty", array("app" => $this->appName));
-            return ["error" => $this->trans->t("Diagramming app not configured! Please contact admin.")];
+            return ["error" => $this->trans->t("Draw.io app not configured! Please contact admin.")];
         }
 
         $drawioUrlArray = explode("?",$drawioUrl);
@@ -696,10 +674,8 @@ class EditorController extends Controller
             $csp->addAllowedScriptDomain($drawioUrl);
             $csp->addAllowedFrameDomain($drawioUrl);
             $csp->addAllowedFrameDomain("blob:");
-			if (method_exists($csp, 'addAllowedChildSrcDomain')) {
-            	$csp->addAllowedChildSrcDomain($drawioUrl);
-            	$csp->addAllowedChildSrcDomain("blob:");
-			}
+            $csp->addAllowedChildSrcDomain($drawioUrl);
+            $csp->addAllowedChildSrcDomain("blob:");
         }
         $response->setContentSecurityPolicy($csp);
 
@@ -813,14 +789,7 @@ class EditorController extends Controller
             
             if (!empty($fileId) && $file->getType() == FileInfo::TYPE_FOLDER) // File in a shared folder case
             {
-                $nodes = $file->getById($fileId);
-
-                if (empty($nodes))
-                {
-                    throw new NotFoundException();
-                }
-
-                $file = $nodes[0];
+                $file = $file->getById($fileId)[0];
             }
         }
         else
@@ -859,16 +828,9 @@ class EditorController extends Controller
         $dir = null;
         $isCreatable = false;
 
-        if (!empty($dirId) && $this->userSession->isLoggedIn())
+        if (!empty($dirId) && $this->userSession->isLoggedIn()) 
         {
-            $nodes = $this->root->getById($dirId);
-
-            if (empty($nodes))
-            {
-                throw new NotFoundException();
-            }
-
-            $dir = $nodes[0];
+            $dir = $this->root->getById($dirId)[0];
         }
         else if (!empty($shareToken))
         {

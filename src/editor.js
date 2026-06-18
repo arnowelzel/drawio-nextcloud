@@ -210,20 +210,11 @@ import '@nextcloud/dialogs/style.css';
 
         function startEditor() 
         {
-            var receiver = async function (evt)
+            var receiver = async function (evt) 
             {
-                if (evt.data.length > 0 && origin.includes(evt.origin))
+                if (evt.data.length > 0 && origin.includes(evt.origin)) 
                 {
-                    var payload;
-
-                    try
-                    {
-                        payload = JSON.parse(evt.data);
-                    }
-                    catch (e)
-                    {
-                        return; // Ignore non-JSON messages
-                    }
+                    var payload = JSON.parse(evt.data);
 
                     if (payload.event === 'template') 
                     {
