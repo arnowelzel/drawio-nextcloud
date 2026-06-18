@@ -1,24 +1,14 @@
-# ⚠️ DEPRECATED — Draw.io integration for Nextcloud
-
-> **This app is deprecated and will not receive further updates. Do not install it. If you are currently using it, please migrate away.**
+# Draw.io integration for Nextcloud
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-This Nextcloud app integrated the [draw.io](https://app.diagrams.net) diagram editor. It is no longer maintained and will not be updated for future Nextcloud releases.
+This Nextcloud app integrates the [draw.io](https://app.diagrams.net) diagram editor.
 
-## Migration Guide
-
-Your `.drawio` and `.dwb` files are standard draw.io XML — they work with any draw.io-compatible editor.
-
-1. **Download** your `.drawio` and `.dwb` files from Nextcloud
-2. **Open** them at [app.diagrams.net](https://app.diagrams.net) or with [draw.io Desktop](https://github.com/jgraph/drawio-desktop)
-3. **Disable and remove** the Draw.io app from your Nextcloud instance
-
-## Alternatives
-
-- [app.diagrams.net](https://app.diagrams.net) — the official free draw.io web editor
-- [draw.io Desktop](https://github.com/jgraph/drawio-desktop) — offline desktop application for Windows, macOS, and Linux
-- [Whiteboard](https://apps.nextcloud.com/apps/whiteboard) — Nextcloud's built-in whiteboard app
+_Note: The new maintainer of the app will be [Arno Welzel](https://github.com/arnowelzel/) and the app
+will get further updates in the future. However as of 2026-06-18 this change still in progress
+and not finished yet. Before the change is finished, no updates will be possible. Feel free to open
+new issues or pull requests. They will be addressed as soon as the maintenance of the application is
+offically transferred._
 
 ## License
 
