@@ -8,5 +8,5 @@ Fixes #
 
 ## Testing
 
-- [ ] Tested against the [test checklist](../DEV.md#test-checklist) (relevant sections)
+- [ ] Tested against the [test checklist](../blob/main/DEV.md#test-checklist) (relevant sections)
 - [ ] Ran `npm run build` successfully
