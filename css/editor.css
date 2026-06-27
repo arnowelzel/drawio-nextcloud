@@ -11,6 +11,7 @@
 #content.app-drawio {
     margin: 0;
     height: 100%;
+    width: 100%;
     padding-block-end: 0 !important;
     z-index: 2147483647;
 }
