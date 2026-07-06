@@ -14,4 +14,5 @@
     width: 100%;
     padding-block-end: 0 !important;
     z-index: 2147483647;
+    border-radius: 0;
 }
