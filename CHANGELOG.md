@@ -1,5 +1,13 @@
 # Change Log
 
+## 4.2.5
+
+- Fix editor style to use full screen
+
+## 4.2.4
+
+- Support for Nextcloud 33/34
+
 ## 4.2.0
 
 - Dropped Nextcloud 32 support — now requires Nextcloud 33
