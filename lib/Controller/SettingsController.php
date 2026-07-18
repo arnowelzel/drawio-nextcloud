@@ -110,6 +110,7 @@ class SettingsController extends Controller
         $this->config->SetDrawioConfig($drawioConfig);
         $this->config->SetWhiteboards($whiteboards);
 
+        /*
         $checkmime = new \OCA\Drawio\Migration\CheckMimeType();
         $registered = $checkmime->run();
 
@@ -132,6 +133,7 @@ class SettingsController extends Controller
             };
             $mime->run($output);
         }
+        */
 
         return [
             "drawioUrl" => $this->config->GetDrawioUrl(),

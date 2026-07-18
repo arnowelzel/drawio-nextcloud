@@ -79,7 +79,7 @@ class Application extends App implements IBootstrap {
         $detector->registerType("drawio", "application/x-drawio");
         $detector->registerType("dwb", "application/x-drawio-wb");
 
-        $this->ensureMimeTypeAssets($container, $appConfig, $detector);
+        // $this->ensureMimeTypeAssets($container, $appConfig, $detector);
     }
 
     /**
@@ -100,6 +100,7 @@ class Application extends App implements IBootstrap {
             $logger->info('Diagramming: Re-registering MIME type assets (NC version: ' .
                 $storedNcVersion . ' -> ' . $currentNcVersion . ')', ['app' => 'drawio']);
 
+            /*
             $mimeTypeLoader = $container->get(IMimeTypeLoader::class);
             $updateJS = new \OC\Core\Command\Maintenance\Mimetype\UpdateJS($detector);
             $mime = new \OCA\Drawio\Migration\RegisterMimeType($mimeTypeLoader, $updateJS);
@@ -117,6 +118,7 @@ class Application extends App implements IBootstrap {
 
             $mime->run($output);
             $appConfig->SetNcVersion($currentNcVersion);
+            */
 
             $logger->info('Diagramming: MIME type assets re-registered successfully', ['app' => 'drawio']);
         } catch (\Exception $e) {

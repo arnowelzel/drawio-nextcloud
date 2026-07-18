@@ -231,5 +231,4 @@ class AppConfig {
             "drawio" => [ "mime" => "application/x-drawio", "type" => "text" ],
             "dwb" => [ "mime" => "application/x-drawio-wb", "type" => "text" ]
         ];
-
 }

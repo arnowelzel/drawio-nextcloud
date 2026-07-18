@@ -1,24 +1,8 @@
 <?php
 
-/**
- *
- * @author Pawel Rojek <pawel at pawelrojek.com>
- *
- * This file is licensed under the Affero General Public License version 3 or later.
- *
- * Based on Keeweb solution
- *
- **/
-
 namespace OCA\Drawio\Migration;
 
-
-use OCP\Files\IMimeTypeLoader;
 use OCP\Migration\IOutput;
-use OCP\Migration\IRepairStep;
-use OC\Core\Command\Maintenance\Mimetype\UpdateJS;
-use Symfony\Component\Console\Input\StringInput;
-use Symfony\Component\Console\Output\ConsoleOutput;
 
 class UnregisterMimeType extends MimeTypeMigration
 {
@@ -40,9 +24,13 @@ class UnregisterMimeType extends MimeTypeMigration
         $mimetypealiasesFile = $configDir . self::CUSTOM_MIMETYPEALIASES;
         $mimetypemappingFile = $configDir . self::CUSTOM_MIMETYPEMAPPING;
 
-        $this->removeFromFile($mimetypealiasesFile, ['application/x-drawio' => 'drawio', 'application/x-drawio-wb' => 'dwb']);
-        $this->removeFromFile($mimetypemappingFile, ['drawio' => ['application/x-drawio'], 'dwb' => ['application/x-drawio-wb']]);
-        $this->updateJS->run(new StringInput(''), new ConsoleOutput());
+        $this->removeFromFile($mimetypealiasesFile, [
+            'application/x-drawio' => 'drawio',
+            'application/x-drawio-wb' => 'dwb'
+        ]);
+        $this->removeFromFile($mimetypemappingFile, [
+            'drawio' => ['application/x-drawio'],
+            'dwb' => ['application/x-drawio-wb']]);
     }
 
     public function run(IOutput $output)
