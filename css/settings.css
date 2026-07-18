@@ -7,6 +7,10 @@
     margin-top: 20px;
 }
 
+#drawio .drawio-setting a {
+    text-decoration: underline;
+}
+
 #drawio .drawio-setting label {
     display: block;
     font-weight: 700;

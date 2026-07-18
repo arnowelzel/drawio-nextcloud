@@ -1,5 +1,10 @@
 # Change Log
 
+## 4.3.0
+
+- Refactored MIME type registration to avoid changint core files of Nextcloud
+- Filetype icons will no longer be copied to Nextcloud core folders to avoid integrity check errors.
+
 ## 4.2.5
 
 - Fix editor style to use full screen

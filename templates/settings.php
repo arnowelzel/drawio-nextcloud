@@ -6,6 +6,11 @@
     <h2>Diagramming</h2>
 
     <div class="drawio-setting">
+        <?php p($l->t("When you upgraded from a version older than 4.3.0 you may have to fix the Nextcloud MIME type settings. Please see the instructions at GitHub:")) ?>
+        <a href="https://github.com/arnowelzel/drawio-nextcloud/wiki/FAQ">https://github.com/arnowelzel/drawio-nextcloud/wiki/FAQ</a>
+    </div>
+
+    <div class="drawio-setting">
         <label for="drawioUrl"><?php p($l->t("Editor URL")) ?></label>
         <input id="drawioUrl" value="<?php p($_["drawioUrl"]) ?>" placeholder="https://<drawio-url>" type="text">
         <p class="drawio-hint"><?php p($l->t("Note: To enable realtime collaboration, leave blank or enter (https://embed.diagrams.net)")) ?></p>
