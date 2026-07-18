@@ -110,31 +110,6 @@ class SettingsController extends Controller
         $this->config->SetDrawioConfig($drawioConfig);
         $this->config->SetWhiteboards($whiteboards);
 
-        /*
-        $checkmime = new \OCA\Drawio\Migration\CheckMimeType();
-        $registered = $checkmime->run();
-
-        if ($registered == false) {
-            // NOTE: UpdateJS is an internal Nextcloud class (OC\Core\Command\Maintenance\Mimetype\UpdateJS).
-            // There is no public OCP API for MIME type JS regeneration. This is unavoidable and shared
-            // by all NC apps that register custom MIME types (Keeweb, Mind Map, etc.).
-            $updateJS = new \OC\Core\Command\Maintenance\Mimetype\UpdateJS($this->mimeTypeDetector);
-            $mime = new \OCA\Drawio\Migration\RegisterMimeType($this->mimeTypeLoader, $updateJS);
-            $output = new class($this->logger, $this->appName) implements \OCP\Migration\IOutput {
-                private $logger;
-                private $appName;
-                public function __construct($logger, $appName) { $this->logger = $logger; $this->appName = $appName; }
-                public function debug(string $message): void { $this->logger->debug($message, ['app' => $this->appName]); }
-                public function info($message) { $this->logger->info($message, ['app' => $this->appName]); }
-                public function warning($message) { $this->logger->warning($message, ['app' => $this->appName]); }
-                public function startProgress($max = 0): void {}
-                public function advance($step = 1, $description = ''): void {}
-                public function finishProgress(): void {}
-            };
-            $mime->run($output);
-        }
-        */
-
         return [
             "drawioUrl" => $this->config->GetDrawioUrl(),
             "offlineMode" => $this->config->GetOfflineMode(),
@@ -148,5 +123,4 @@ class SettingsController extends Controller
             "drawioWhiteboards" =>$this->config->GetWhiteboards(),
         ];
     }
-
 }

@@ -100,26 +100,6 @@ class Application extends App implements IBootstrap {
             $logger->info('Diagramming: Re-registering MIME type assets (NC version: ' .
                 $storedNcVersion . ' -> ' . $currentNcVersion . ')', ['app' => 'drawio']);
 
-            /*
-            $mimeTypeLoader = $container->get(IMimeTypeLoader::class);
-            $updateJS = new \OC\Core\Command\Maintenance\Mimetype\UpdateJS($detector);
-            $mime = new \OCA\Drawio\Migration\RegisterMimeType($mimeTypeLoader, $updateJS);
-
-            $output = new class($logger) implements \OCP\Migration\IOutput {
-                private $logger;
-                public function __construct($logger) { $this->logger = $logger; }
-                public function debug(string $message): void { $this->logger->debug($message, ['app' => 'drawio']); }
-                public function info($message) { $this->logger->info($message, ['app' => 'drawio']); }
-                public function warning($message) { $this->logger->warning($message, ['app' => 'drawio']); }
-                public function startProgress($max = 0): void {}
-                public function advance($step = 1, $description = ''): void {}
-                public function finishProgress(): void {}
-            };
-
-            $mime->run($output);
-            $appConfig->SetNcVersion($currentNcVersion);
-            */
-
             $logger->info('Diagramming: MIME type assets re-registered successfully', ['app' => 'drawio']);
         } catch (\Exception $e) {
             $logger = $container->get(LoggerInterface::class);
