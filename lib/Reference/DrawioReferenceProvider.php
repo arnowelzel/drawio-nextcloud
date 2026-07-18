@@ -6,8 +6,8 @@ use OCP\Collaboration\Reference\ADiscoverableReferenceProvider;
 use OCP\Collaboration\Reference\ISearchableReferenceProvider;
 use OCP\Collaboration\Reference\IReference;
 use OCP\Collaboration\Reference\Reference;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
-use OCP\Files\FileInfo;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
@@ -95,12 +95,12 @@ class DrawioReferenceProvider extends ADiscoverableReferenceProvider implements 
         }
     }
 
-    public function getCachePrefix(string $referenceText): string {
-        $params = $this->parseUrlParams($referenceText);
+    public function getCachePrefix(string $referenceId): string {
+        $params = $this->parseUrlParams($referenceId);
         return ($params['fileId'] ?? '') . '-' . ($params['shareToken'] ?? '');
     }
 
-    public function getCacheKey(string $referenceText): ?string {
+    public function getCacheKey(string $referenceId): ?string {
         return null;
     }
 
@@ -119,12 +119,11 @@ class DrawioReferenceProvider extends ADiscoverableReferenceProvider implements 
 
         $node = $share->getNode();
 
-        if ($node->getType() === FileInfo::TYPE_FOLDER) {
-            $files = $node->getById($fileId);
-            if (empty($files)) {
+        if ($node instanceof Folder) {
+            $node = $node->getFirstNodeById($fileId);
+            if ($node === null) {
                 return null;
             }
-            $node = $files[0];
         }
 
         return $this->buildReference($referenceText, $node);

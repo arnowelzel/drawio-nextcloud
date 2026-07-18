@@ -11,7 +11,8 @@
 
 namespace OCA\Drawio;
 
-use OCP\IConfig;
+use OCA\Drawio\AppInfo\Application;
+use OCP\AppFramework\Services\IAppConfig;
 use Psr\Log\LoggerInterface;
 
 class AppConfig {
@@ -26,12 +27,6 @@ class AppConfig {
     private $predefPreviews = "yes";
     private $predefWhiteboards = "yes";
 
-    private $appName;
-
-    private $config;
-
-    private $logger;
-
     // The config keys
     private $_drawioUrl = "DrawioUrl";
     private $_offlinemode = "DrawioOffline";
@@ -43,29 +38,27 @@ class AppConfig {
     private $_previews = "DrawioPreviews";
     private $_drawioConfig = "DrawioConfig";
     private $_whiteboards = "DrawioWhiteboards";
-    private $_ncVersion = "DrawioNcVersion";
 
-    public function __construct($AppName, IConfig $config, LoggerInterface $logger)
-    {
-        $this->appName = $AppName;
-        $this->config = $config;
-        $this->logger = $logger;
+    public function __construct(
+        private IAppConfig $config,
+        private LoggerInterface $logger,
+    ) {
     }
 
     public function SetDrawioUrl($drawio)
     {
         $drawio = strtolower(trim($drawio));
         if (strlen($drawio) > 0 && !preg_match("/^https?:\/\//i", $drawio)) $drawio = "http://" . $drawio;
-        $this->logger->info("SetDrawioUrl: " . $drawio, array("app" => $this->appName));
-        $this->config->setAppValue($this->appName, $this->_drawioUrl, $drawio);
+        $this->logger->info("SetDrawioUrl: " . $drawio, ["app" => Application::APP_ID]);
+        $this->config->setAppValueString($this->_drawioUrl, $drawio);
     }
 
     public function GetDrawioUrl()
     {
-        $val = $this->config->getAppValue($this->appName, $this->_drawioUrl);
+        $val = $this->config->getAppValueString($this->_drawioUrl);
         if (empty($val)) $val = $this->predefDrawioUrl;
         //default URL changed from draw.io to embed.diagrams.net #118
-        if (in_array(strtolower($val), array("https://draw.io", "https://www.draw.io", "http://draw.io", "http://www.draw.io") )) $val = $this->predefDrawioUrl;
+        if (in_array(strtolower($val), ["https://draw.io", "https://www.draw.io", "http://draw.io", "http://www.draw.io"])) $val = $this->predefDrawioUrl;
         return $val;
     }
 
@@ -73,78 +66,78 @@ class AppConfig {
     public function SetOfflineMode($offlinemode)
     {
         $offlinemode = (string)$offlinemode;
-        $this->logger->info("SetOfflineMode: " . $offlinemode, array("app" => $this->appName));
-        $this->config->setAppValue($this->appName, $this->_offlinemode, $offlinemode);
+        $this->logger->info("SetOfflineMode: " . $offlinemode, ["app" => Application::APP_ID]);
+        $this->config->setAppValueString($this->_offlinemode, $offlinemode);
     }
 
     public function GetOfflineMode()
     {
-        $val = $this->config->getAppValue($this->appName, $this->_offlinemode);
+        $val = $this->config->getAppValueString($this->_offlinemode);
         if (empty($val)) $val = $this->predefOfflineMode;
         return $val;
     }
 
     public function SetTheme($theme)
     {
-        $this->logger->info("SetTheme: " . $theme, array("app" => $this->appName));
-        $this->config->setAppValue($this->appName, $this->_theme, $theme);
+        $this->logger->info("SetTheme: " . $theme, ["app" => Application::APP_ID]);
+        $this->config->setAppValueString($this->_theme, $theme);
     }
 
     public function GetTheme()
     {
-        $val = $this->config->getAppValue($this->appName, $this->_theme);
+        $val = $this->config->getAppValueString($this->_theme);
         if (empty($val)) $val = $this->predefTheme;
         return $val;
     }
 
     public function SetLang($lang)
     {
-        $this->logger->info("SetLang: " . $lang, array("app" => $this->appName));
-        $this->config->setAppValue($this->appName, $this->_lang, $lang);
+        $this->logger->info("SetLang: " . $lang, ["app" => Application::APP_ID]);
+        $this->config->setAppValueString($this->_lang, $lang);
     }
 
     public function GetLang()
     {
-        $val = $this->config->getAppValue($this->appName, $this->_lang);
+        $val = $this->config->getAppValueString($this->_lang);
         if (empty($val)) $val = $this->predefLang;
         return $val;
     }
 
     public function SetAutosave($autosave)
     {
-        $this->logger->info("SetAutosave: " . $autosave, array("app" => $this->appName));
-        $this->config->setAppValue($this->appName, $this->_autosave, $autosave);
+        $this->logger->info("SetAutosave: " . $autosave, ["app" => Application::APP_ID]);
+        $this->config->setAppValueString($this->_autosave, $autosave);
     }
 
     public function GetAutosave()
     {
-        $val = $this->config->getAppValue($this->appName, $this->_autosave);
+        $val = $this->config->getAppValueString($this->_autosave);
         if (empty($val)) $val = $this->predefAutosave;
         return $val;
     }
 
     public function SetLibraries($libraries)
     {
-        $this->logger->info("SetLibraries: " . $libraries, array("app" => $this->appName));
-        $this->config->setAppValue($this->appName, $this->_libraries, $libraries);
+        $this->logger->info("SetLibraries: " . $libraries, ["app" => Application::APP_ID]);
+        $this->config->setAppValueString($this->_libraries, $libraries);
     }
 
     public function GetLibraries()
     {
-        $val = $this->config->getAppValue($this->appName, $this->_libraries);
+        $val = $this->config->getAppValueString($this->_libraries);
         if (empty($val)) $val = $this->predefLibraries;
         return $val;
     }
 
     public function SetDarkMode($darkmode)
     {
-        $this->logger->info("SetDarkMode: " . $darkmode, array("app" => $this->appName));
-        $this->config->setAppValue($this->appName, $this->_darkmode, $darkmode);
+        $this->logger->info("SetDarkMode: " . $darkmode, ["app" => Application::APP_ID]);
+        $this->config->setAppValueString($this->_darkmode, $darkmode);
     }
-    
+
     public function GetDarkMode()
     {
-        $val = $this->config->getAppValue($this->appName, $this->_darkmode);
+        $val = $this->config->getAppValueString($this->_darkmode);
         if (empty($val))
         {
             if ($this->GetTheme() == "dark")
@@ -161,42 +154,42 @@ class AppConfig {
 
     public function SetPreviews($previews)
     {
-        $this->logger->info("SetPreviews: " . $previews, array("app" => $this->appName));
-        $this->config->setAppValue($this->appName, $this->_previews, $previews);
+        $this->logger->info("SetPreviews: " . $previews, ["app" => Application::APP_ID]);
+        $this->config->setAppValueString($this->_previews, $previews);
     }
 
     public function GetPreviews()
     {
-        $val = $this->config->getAppValue($this->appName, $this->_previews);
+        $val = $this->config->getAppValueString($this->_previews);
         if (empty($val)) $val = $this->predefPreviews;
         return $val;
     }
-    
+
     public function SetWhiteboards($whiteboards)
     {
-        $this->logger->info("SetWhiteboards: " . $whiteboards, array("app" => $this->appName));
-        $this->config->setAppValue($this->appName, $this->_whiteboards, $whiteboards);
+        $this->logger->info("SetWhiteboards: " . $whiteboards, ["app" => Application::APP_ID]);
+        $this->config->setAppValueString($this->_whiteboards, $whiteboards);
     }
 
     public function GetWhiteboards()
     {
-        $val = $this->config->getAppValue($this->appName, $this->_whiteboards);
+        $val = $this->config->getAppValueString($this->_whiteboards);
         if (empty($val)) $val = $this->predefWhiteboards;
         return $val;
     }
 
     public function SetDrawioConfig($drawioConfig)
     {
-        $this->logger->info("SetDrawioConfig: " . $drawioConfig, array("app" => $this->appName));
+        $this->logger->info("SetDrawioConfig: " . $drawioConfig, ["app" => Application::APP_ID]);
         // Check if the json is valid
         $val = json_decode($drawioConfig);
-        $this->config->setAppValue($this->appName, $this->_drawioConfig, empty($val)? "" : $drawioConfig);
+        $this->config->setAppValueString($this->_drawioConfig, empty($val)? "" : $drawioConfig);
     }
 
     public function GetDrawioConfig()
     {
-        $val = $this->config->getAppValue($this->appName, $this->_drawioConfig);
-        
+        $val = $this->config->getAppValueString($this->_drawioConfig);
+
         if (empty(json_decode($val)))
         {
             return "{}";
@@ -206,29 +199,4 @@ class AppConfig {
             return $val;
         }
     }
-
-    public function SetNcVersion($version)
-    {
-        $this->config->setAppValue($this->appName, $this->_ncVersion, $version);
-    }
-
-    public function GetNcVersion()
-    {
-        return $this->config->getAppValue($this->appName, $this->_ncVersion, '');
-    }
-
-    public function GetAppName()
-    {
-        return $this->appName;
-    }
-
-     /**
-     * Additional data about formats
-     *
-     * @var array
-     */
-    public $formats = [
-            "drawio" => [ "mime" => "application/x-drawio", "type" => "text" ],
-            "dwb" => [ "mime" => "application/x-drawio-wb", "type" => "text" ]
-        ];
 }

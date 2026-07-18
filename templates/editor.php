@@ -1,6 +1,5 @@
 <?php
-    style("drawio", "editor");
-    script("drawio", "editor");
+    // Scripts and styles are added in EditorController::index()
 
     $frame_params = "?embed=1&embedRT=1&configure=1";
     if ($_["drawioOfflineMode"] === "yes")

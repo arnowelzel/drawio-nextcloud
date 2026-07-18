@@ -1,7 +1,4 @@
-<?php
-    style("drawio", "settings");
-    script("drawio", "settings");
-?>
+<?php // Scripts and styles are added in SettingsController::index() ?>
 <div id="drawio" class="section section-drawio">
     <h2>Diagramming</h2>
 

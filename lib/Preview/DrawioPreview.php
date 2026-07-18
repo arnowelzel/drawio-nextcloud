@@ -11,9 +11,9 @@ use OCP\Files\NotFoundException;
 use OCP\IImage;
 use OCP\Image;
 use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
 
 use OCA\Drawio\AppConfig;
+use OCA\Drawio\AppInfo\Application;
 
 class DrawioPreview implements IProviderV2
 {
@@ -37,7 +37,7 @@ class DrawioPreview implements IProviderV2
     {
         $this->logger = $logger;
         $this->appData = $appData;
-        $this->appName = 'drawio';
+        $this->appName = Application::APP_ID;
         $this->appConfig = $appConfig;
     }
 
@@ -102,7 +102,7 @@ class DrawioPreview implements IProviderV2
         }
         catch (\Exception $e)
         {
-            $this->logger->error($e->getMessage(), ["message" => "Can't get preview file", "app" => $this->appName, 'level' => LogLevel::ERROR, 'exception' => $e]);
+            $this->logger->error($e->getMessage(), ["message" => "Can't get preview file", "app" => $this->appName, 'exception' => $e]);
             return false;
         }
     }

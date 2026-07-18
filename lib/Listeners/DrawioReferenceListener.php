@@ -2,11 +2,15 @@
 
 namespace OCA\Drawio\Listeners;
 
+use OCA\Drawio\AppInfo\Application;
 use OCP\Collaboration\Reference\RenderReferenceEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\Util;
 
+/**
+ * @template-implements IEventListener<RenderReferenceEvent>
+ */
 class DrawioReferenceListener implements IEventListener {
 
     public function handle(Event $event): void {
@@ -14,6 +18,6 @@ class DrawioReferenceListener implements IEventListener {
             return;
         }
 
-        Util::addScript('drawio', 'drawio-reference');
+        Util::addScript(Application::APP_ID, 'drawio-reference');
     }
 }
