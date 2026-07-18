@@ -1,0 +1,34 @@
+{
+    "name": "nextcloud/drawio",
+    "description": "Diagramming (draw.io) integration for Nextcloud - dev tooling",
+    "type": "project",
+    "license": "AGPL-3.0-or-later",
+    "config": {
+        "platform": {
+            "php": "8.2.27"
+        },
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "OCA\\Drawio\\": "lib/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "OCP\\": "vendor/nextcloud/ocp/OCP"
+        }
+    },
+    "require-dev": {
+        "nextcloud/ocp": "dev-stable33",
+        "phpunit/phpunit": "^10.5",
+        "vimeo/psalm": "^6.0"
+    },
+    "scripts": {
+        "lint": "find lib appinfo templates tests -name \"*.php\" -print0 | xargs -0 -n1 php -l",
+        "psalm": "psalm --no-cache --threads=1",
+        "test:unit": "phpunit --testsuite unit"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

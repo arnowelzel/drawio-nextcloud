@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  php-lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-versions: ['8.2', '8.3', '8.4']
+    name: php-lint (${{ matrix.php-versions }})
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP ${{ matrix.php-versions }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          coverage: none
+
+      - name: Lint
+        run: find lib appinfo templates tests -name "*.php" -print0 | xargs -0 -n1 php -l
+
+  info-xml:
+    runs-on: ubuntu-latest
+    name: info.xml schema validation
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install xmllint
+        run: sudo apt-get update -q && sudo apt-get install -y -q libxml2-utils
+
+      - name: Download app store schema
+        run: curl -sSLo /tmp/info.xsd https://apps.nextcloud.com/schema/apps/info.xsd
+
+      - name: Validate appinfo/info.xml
+        run: xmllint --noout --schema /tmp/info.xsd appinfo/info.xml
+
+  psalm:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ocp-branch: ['stable33', 'stable34']
+    name: psalm (nextcloud/ocp ${{ matrix.ocp-branch }})
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Install dependencies
+        run: |
+          composer require --dev --no-update nextcloud/ocp:dev-${{ matrix.ocp-branch }}
+          composer update --prefer-dist --no-progress
+
+      - name: Run psalm
+        run: composer run psalm
+
+  phpunit:
+    runs-on: ubuntu-latest
+    name: phpunit
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-progress
+
+      - name: Run unit tests
+        run: composer run test:unit
+
+  js-build:
+    runs-on: ubuntu-latest
+    name: javascript build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build

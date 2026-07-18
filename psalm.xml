@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="4"
+    resolveFromConfigFile="true"
+    findUnusedBaselineEntry="false"
+    findUnusedCode="false"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+>
+    <projectFiles>
+        <directory name="lib" />
+        <ignoreFiles>
+            <directory name="vendor" />
+        </ignoreFiles>
+    </projectFiles>
+    <stubs>
+        <file name="tests/stubs/oc.phpstub" />
+        <file name="tests/stubs/oca.phpstub" />
+    </stubs>
+    <issueHandlers>
+        <!-- #[\Override] requires PHP 8.3; the app still supports PHP 8.2 -->
+        <MissingOverrideAttribute errorLevel="suppress" />
+        <!-- App classes are instantiated through DI and may be extended -->
+        <ClassMustBeFinal errorLevel="suppress" />
+        <!-- Legacy code is not fully typed yet -->
+        <MissingReturnType errorLevel="info" />
+        <MissingParamType errorLevel="info" />
+        <MissingPropertyType errorLevel="info" />
+        <!-- Compatibility guard: deprecated Nextcloud APIs must not be used -->
+        <DeprecatedClass errorLevel="error" />
+        <DeprecatedConstant errorLevel="error" />
+        <DeprecatedFunction errorLevel="error" />
+        <DeprecatedInterface errorLevel="error" />
+        <DeprecatedMethod errorLevel="error" />
+        <DeprecatedProperty errorLevel="error" />
+        <DeprecatedTrait errorLevel="error" />
+    </issueHandlers>
+</psalm>

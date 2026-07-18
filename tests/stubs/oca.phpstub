@@ -1,0 +1,68 @@
+<?php
+
+/**
+ * Psalm stubs for OCA classes from other apps (files, files_sharing,
+ * files_versions) that are not part of the nextcloud/ocp package.
+ * Signatures mirror nextcloud/server stable33.
+ */
+
+namespace OCA\Files\Event {
+    class LoadAdditionalScriptsEvent extends \OCP\EventDispatcher\Event {
+    }
+}
+
+namespace OCA\Files_Sharing\Event {
+    class BeforeTemplateRenderedEvent extends \OCP\EventDispatcher\Event {
+        public const SCOPE_PUBLIC_SHARE_AUTH = 'publicShareAuth';
+
+        public function getShare(): \OCP\Share\IShare {
+        }
+
+        public function getScope(): ?string {
+        }
+    }
+}
+
+namespace OCA\Files_Versions\Versions {
+    interface IVersion {
+        public function getBackend(): IVersionBackend;
+
+        public function getSourceFile(): \OCP\Files\FileInfo;
+
+        /** @return int|string */
+        public function getRevisionId();
+
+        public function getTimestamp(): int;
+
+        public function getSize(): int;
+
+        public function getSourceFileName(): string;
+
+        public function getMimeType(): string;
+
+        public function getVersionPath(): string;
+
+        public function getUser(): \OCP\IUser;
+    }
+
+    interface IVersionBackend {
+        public function useBackendForStorage(\OCP\Files\Storage\IStorage $storage): bool;
+
+        /** @return IVersion[] */
+        public function getVersionsForFile(\OCP\IUser $user, \OCP\Files\FileInfo $file): array;
+
+        public function createVersion(\OCP\IUser $user, \OCP\Files\FileInfo $file);
+
+        public function rollback(IVersion $version);
+
+        /** @return resource|false */
+        public function read(IVersion $version);
+
+        /** @param int|string $revision */
+        public function getVersionFile(\OCP\IUser $user, \OCP\Files\FileInfo $sourceFile, $revision): \OCP\Files\File;
+    }
+
+    interface IVersionManager extends IVersionBackend {
+        public function registerBackend(string $storageType, IVersionBackend $backend);
+    }
+}
