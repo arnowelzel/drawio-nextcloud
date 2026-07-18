@@ -85,7 +85,7 @@ npm ci
 ```
 Then open http://localhost:8088 (admin / admin). PHP changes are live (volume-mounted); JS changes require `npm run build`.
 
-**Important:** Do not change the app version in `info.xml` during development — it will break the Nextcloud instance.
+**Important:** Do not change the app version in `info.xml` during development — Nextcloud disables the app until the upgrade is applied, and the e2e suite then fails with confusing 403/404 errors. After a version bump, run `docker compose exec -u 33 nextcloud php occ upgrade` before testing again.
 
 ## Architecture
 
