@@ -2,6 +2,7 @@
 
 namespace OCA\Drawio\Listeners;
 
+use OCA\Drawio\AppConfig;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\Files\Template\RegisterTemplateCreatorEvent;
@@ -15,6 +16,7 @@ class RegisterTemplateCreatorListener implements IEventListener {
 
     public function __construct(
         private IL10N $l10n,
+        private AppConfig $config,
     ) {
     }
 
@@ -30,6 +32,12 @@ class RegisterTemplateCreatorListener implements IEventListener {
             $drawio->setActionLabel($this->l10n->t('New Diagram'));
             return $drawio;
         });
+
+        // The admin setting "Enable whiteboards?" hides the whiteboard
+        // entry from the file creation menu.
+        if ($this->config->GetWhiteboards() !== 'yes') {
+            return;
+        }
 
         $event->getTemplateManager()->registerTemplateFileCreator(function () {
             $dwb = new TemplateFileCreator('drawio', $this->l10n->t('New Whiteboard'), '.dwb');
