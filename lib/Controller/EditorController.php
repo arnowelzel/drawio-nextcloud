@@ -490,11 +490,11 @@ class EditorController extends Controller
 						Http::STATUS_FORBIDDEN);
 				}
 			} else if (!empty($fileContents)) {
-				$this->logger->error('No file content supplied');
-				return new DataResponse(['message' => $this->trans->t('File content not supplied')], Http::STATUS_BAD_REQUEST);
-			} else {
 				$this->logger->error('No file etag supplied', ['app' => $this->appName]);
 				return new DataResponse(['message' => $this->trans->t('File etag not supplied')], Http::STATUS_BAD_REQUEST);
+			} else {
+				$this->logger->error('No file content supplied', ['app' => $this->appName]);
+				return new DataResponse(['message' => $this->trans->t('File content not supplied')], Http::STATUS_BAD_REQUEST);
 			}
 		}
         catch (BadRequestException $e)
