@@ -1,5 +1,9 @@
 # Change Log
 
+## 4.3.1
+
+- Refactored main app icon.
+
 ## 4.3.0
 
 - Refactored MIME type registration to avoid changint core files of Nextcloud

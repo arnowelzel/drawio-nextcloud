@@ -1,9 +1,9 @@
 .icon-drawio
 {
-    background-image: url("../img/drawio.svg") !important;
+    background-image: url("../img-filetypes/drawio.svg") !important;
 }
 
 .icon-whiteboard
 {
-    background-image: url("../img/dwb.svg") !important;
+    background-image: url("../img-filetypes/dwb.svg") !important;
 }
