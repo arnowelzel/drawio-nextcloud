@@ -23,7 +23,6 @@ use OCP\Files\FileInfo;
 use OCP\Files\IRootFolder;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
 use OCP\Share\Exceptions\ShareNotFound;
@@ -41,6 +40,7 @@ use OCA\Files_Versions\Storage;
 use OCA\Files_Versions\Versions\IVersionManager;
 use OCA\Files_Versions\Versions\IVersion;
 use OCA\Drawio\AppConfig;
+use OCA\Drawio\Service\PublicShareAuth;
 
 
 use OCP\HintException;
@@ -66,17 +66,18 @@ class EditorController extends Controller
     private $logger;
     private $config;
     /**
-     * Session
-     *
-     * @var ISession
-     */
-    private $session;
-    /**
      * Share manager
      *
      * @var IManager
      */
     private $shareManager;
+
+    /**
+     * Public share authentication check
+     *
+     * @var PublicShareAuth
+     */
+    private $shareAuth;
 
     /**
 	 * @var \OCP\Lock\ILockingProvider
@@ -116,7 +117,7 @@ class EditorController extends Controller
                                 LoggerInterface $logger,
                                 AppConfig $config,
                                 IManager $shareManager,
-                                ISession $session,
+                                PublicShareAuth $shareAuth,
                                 ILockingProvider $lockingProvider,
                                 IAppData $appData,
                                 IConfig $ncConfig,
@@ -133,7 +134,7 @@ class EditorController extends Controller
         $this->logger = $logger;
         $this->config = $config;
         $this->shareManager = $shareManager;
-        $this->session = $session;
+        $this->shareAuth = $shareAuth;
         $this->lockingProvider = $lockingProvider;
         $this->appData = $appData;
         $this->ncConfig = $ncConfig;
@@ -727,7 +728,7 @@ class EditorController extends Controller
         }
 
         if ($share === null || $share === false ||
-            ($share->getPassword() !== null && !$this->isShareAuthenticated($share)) ||
+            !$this->shareAuth->isAuthenticated($share) ||
             !$this->checkPermissions($share, Constants::PERMISSION_READ))
         {
             throw new ForbiddenException('Insufficient permissions', false);
@@ -735,26 +736,6 @@ class EditorController extends Controller
 
         return [$share->getNode(), $share];
     }
-
-    /**
-     * Check if the current session has authenticated for a password-protected share.
-     * Nextcloud stores authenticated share IDs as an array in the session,
-     * but we also handle the legacy string format for compatibility.
-     *
-     * @param \OCP\Share\IShare $share
-     *
-     * @return bool
-     */
-    private function isShareAuthenticated($share)
-    {
-        $authenticated = $this->session->get("public_link_authenticated");
-        if (is_array($authenticated))
-        {
-            return in_array($share->getId(), $authenticated);
-        }
-        return $authenticated === (string) $share->getId();
-    }
-
 
     /**
      * Getting file by id
