@@ -20,6 +20,7 @@
         }
     },
     "require-dev": {
+        "guzzlehttp/guzzle": "^7.9",
         "nextcloud/ocp": "dev-stable33",
         "phpunit/phpunit": "^10.5",
         "vimeo/psalm": "^6.0"
@@ -27,7 +28,8 @@
     "scripts": {
         "lint": "find lib appinfo templates tests -name \"*.php\" -print0 | xargs -0 -n1 php -l",
         "psalm": "psalm --no-cache --threads=1",
-        "test:unit": "phpunit --testsuite unit"
+        "test:unit": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e"
     },
     "minimum-stability": "dev",
     "prefer-stable": true
