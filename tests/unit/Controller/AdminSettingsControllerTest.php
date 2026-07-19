@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace OCA\Drawio\Tests\Unit\Controller;
 
 use OCA\Drawio\AppConfig;
-use OCA\Drawio\Controller\SettingsController;
+use OCA\Drawio\Controller\AdminSettingsController;
 use OCA\Drawio\Tests\Support\ResetsGlobalState;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-final class SettingsControllerTest extends TestCase {
+final class AdminSettingsControllerTest extends TestCase {
     use ResetsGlobalState;
 
     private IRequest&MockObject $request;
@@ -24,8 +24,8 @@ final class SettingsControllerTest extends TestCase {
         $this->appConfig = $this->createMock(AppConfig::class);
     }
 
-    private function createController(): SettingsController {
-        return new SettingsController($this->request, $this->appConfig);
+    private function createController(): AdminSettingsController {
+        return new AdminSettingsController($this->request, $this->appConfig);
     }
 
     private function configureGetters(): void {
@@ -47,13 +47,13 @@ final class SettingsControllerTest extends TestCase {
         $response = $this->createController()->index();
 
         $this->assertInstanceOf(TemplateResponse::class, $response);
-        $this->assertSame('settings', $response->getTemplateName());
+        $this->assertSame('adminSettings', $response->getTemplateName());
         $this->assertSame(TemplateResponse::RENDER_AS_BLANK, $response->getRenderAs());
         $params = $response->getParams();
         $this->assertSame('https://embed.diagrams.net', $params['drawioUrl']);
         $this->assertSame('yes', $params['drawioWhiteboards']);
 
-        $this->assertContains('drawio/js/settings', self::scripts()['drawio'] ?? []);
+        $this->assertContains('drawio/js/adminSettings', self::scripts()['drawio'] ?? []);
         $this->assertContains('drawio/css/settings', \OC_Util::$styles);
     }
 

@@ -1,19 +1,9 @@
-/**
- *
- * @author Pawel Rojek <pawel at pawelrojek.com>
- * @author Ian Reinhart Geiser <igeiser at devonit.com>
- *
- * This file is licensed under the Affero General Public License version 3 or later.
- *
- **/
-
 import { generateUrl } from '@nextcloud/router'
 import * as $ from 'jquery';
 import { translate as t } from '@nextcloud/l10n'
 import axios from '@nextcloud/axios'
 import { showInfo, showSuccess, showError } from '@nextcloud/dialogs'
 import '@nextcloud/dialogs/style.css';
-
 
 $(function () {
     OCA.DrawIO = OCA.DrawIO || {};
@@ -26,44 +16,16 @@ $(function () {
 
     $('#drawioSave').click(async function ()
     {
-        var f_drawioUrl = $('#drawioUrl').val().trim();
-        var f_offlineMode = $('#offlineMode option:selected').val();
         var f_theme = $('#theme option:selected').val();
         var f_lang = $('#lang').val();
-        var f_autosave = $('#drawioAutosave option:selected').val();
-        var f_libraries = $('#drawioLibraries option:selected').val();
         var f_darkMode = $('#darkMode option:selected').val();
-        var f_previews = $('#drawioPreviews option:selected').val();
-        var f_whiteboards = $('#drawioWhiteboards option:selected').val();
-        var f_drawioConfig = $('#drawioConfig').val().trim();
-
-        if (f_drawioConfig)
-        {
-            try
-            {
-                var tmp = JSON.parse(f_drawioConfig);
-                f_drawioConfig = JSON.stringify(tmp); // convert to a single line
-            }
-            catch (e)
-            {
-                showError(t(OCA.DrawIO.AppName, 'Configuration error:') + ' ' + e.message, { timeout: 2500 });
-                return;
-            }
-        }
 
         var saving = showInfo(t(OCA.DrawIO.AppName, 'Saving...'));
 
         var settings = {
-            drawioUrl: f_drawioUrl,
-            offlineMode: f_offlineMode,
             theme: f_theme,
             lang: f_lang,
-            autosave: f_autosave,
-            libraries: f_libraries,
             darkMode: f_darkMode,
-            previews: f_previews,
-            whiteboards: f_whiteboards,
-            drawioConfig: f_drawioConfig
         };
 
         const params = new URLSearchParams();
@@ -73,7 +35,7 @@ $(function () {
             params.append(key, settings[key]);
         }
 
-        var response = await axios.post(generateUrl('apps/'+ OCA.DrawIO.AppName + '/ajax/settings'), params);
+        var response = await axios.post(generateUrl('apps/'+ OCA.DrawIO.AppName + '/ajax/personalSettings'), params);
         saving.hideToast();
 
         if (response.status == 200)

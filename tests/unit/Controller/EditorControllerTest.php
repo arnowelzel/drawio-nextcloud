@@ -6,6 +6,7 @@ namespace OCA\Drawio\Tests\Unit\Controller;
 
 use OCA\Drawio\AppConfig;
 use OCA\Drawio\Controller\EditorController;
+use OCA\Drawio\PersonalConfig;
 use OCA\Drawio\Service\PublicShareAuth;
 use OCA\Drawio\Tests\Support\ResetsGlobalState;
 use OCA\Files_Versions\Versions\IVersion;
@@ -46,6 +47,7 @@ final class EditorControllerTest extends TestCase {
     private IURLGenerator&MockObject $urlGenerator;
     private LoggerInterface&MockObject $logger;
     private AppConfig&MockObject $appConfig;
+    private PersonalConfig&MockObject $personalConfig;
     private IManager&MockObject $shareManager;
     private PublicShareAuth&MockObject $shareAuth;
     private ILockingProvider&MockObject $lockingProvider;
@@ -63,6 +65,7 @@ final class EditorControllerTest extends TestCase {
         $this->urlGenerator = $this->createMock(IURLGenerator::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->appConfig = $this->createMock(AppConfig::class);
+        $this->personalConfig = $this->createMock(PersonalConfig::class);
         $this->shareManager = $this->createMock(IManager::class);
         $this->shareAuth = $this->createMock(PublicShareAuth::class);
         $this->lockingProvider = $this->createMock(ILockingProvider::class);
@@ -86,6 +89,7 @@ final class EditorControllerTest extends TestCase {
             $l10n,
             $this->logger,
             $this->appConfig,
+            $this->personalConfig,
             $this->shareManager,
             $this->shareAuth,
             $this->lockingProvider,
@@ -561,6 +565,9 @@ final class EditorControllerTest extends TestCase {
         $this->appConfig->method('GetLibraries')->willReturn('no');
         $this->appConfig->method('GetPreviews')->willReturn('yes');
         $this->appConfig->method('GetDrawioConfig')->willReturn('{}');
+        $this->personalConfig->method('GetLang')->willReturn('auto');
+        $this->personalConfig->method('GetDarkMode')->willReturn('auto');
+        $this->personalConfig->method('GetTheme')->willReturn('default');
         $this->l10nFactory->method('findLanguage')->willReturn('pt_BR');
 
         $response = $this->createController()->index('97', null, false, false);

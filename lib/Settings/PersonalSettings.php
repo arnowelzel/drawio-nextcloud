@@ -1,36 +1,27 @@
 <?php
 
-/**
- *
- * @author Pawel Rojek <pawel at pawelrojek.com>
- * @author Ian Reinhart Geiser <igeiser at devonit.com>
- *
- * This file is licensed under the Affero General Public License version 3 or later.
- *
- **/
-
 namespace OCA\Drawio\Settings;
 
+use OCA\Drawio\Controller\PersonalSettingsController;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Settings\IDelegatedSettings;
 
-use OCA\Drawio\Controller\SettingsController;
+class PersonalSettings implements IDelegatedSettings
+{
+    private PersonalSettingsController $settingsController;
 
-
-class Admin implements IDelegatedSettings {
-
-    private SettingsController $settingsController;
-
-    public function __construct(SettingsController $settingsController)
+    public function __construct(PersonalSettingsController $settingsController)
     {
         $this->settingsController = $settingsController;
     }
 
-    public function getName(): ?string {
+    public function getName(): ?string
+    {
         return null;
     }
 
-    public function getAuthorizedAppConfig(): array {
+    public function getAuthorizedAppConfig(): array
+    {
         return [
             'drawio' => ['/drawio.*/'],
         ];

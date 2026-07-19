@@ -1,4 +1,4 @@
-<?php // Scripts and styles are added in SettingsController::index() ?>
+<?php // Scripts and styles are added in AdminSettingsController::index() ?>
 <div id="drawio" class="section section-drawio">
     <h2>Diagramming</h2>
 

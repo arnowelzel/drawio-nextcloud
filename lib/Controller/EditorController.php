@@ -1,18 +1,9 @@
 <?php
-/**
- *
- * @author Pawel Rojek <pawel at pawelrojek.com>
- * @author Ian Reinhart Geiser <igeiser at devonit.com>
- * @author Arno Welzel <privat at arnowelzel.de>
- *
- * This file is licensed under the Affero General Public License version 3 or later.
- *
- **/
-
 namespace OCA\Drawio\Controller;
 
 use OCA\Drawio\AppConfig;
 use OCA\Drawio\AppInfo\Application;
+use OCA\Drawio\PersonalConfig;
 use OCA\Drawio\Service\PublicShareAuth;
 use OCA\Files_Versions\Versions\IVersion;
 use OCA\Files_Versions\Versions\IVersionManager;
@@ -50,16 +41,16 @@ use OCP\Share\IManager;
 use OCP\Util;
 use Psr\Log\LoggerInterface;
 
-
 class EditorController extends Controller
 {
-
     private $userSession;
     private $root;
     private $urlGenerator;
     private $trans;
     private $logger;
-    private $config;
+    private $appConfig;
+    private $personalConfig;
+
     /**
      * Share manager
      *
@@ -98,21 +89,22 @@ class EditorController extends Controller
      * @param IURLGenerator $urlGenerator - url generator service
      * @param IL10N $trans - l10n service
      * @param LoggerInterface $logger - logger
-     * @param AppConfig $config - app config
+     * @param AppConfig $appConfig - app config
      */
-    public function __construct(IRequest $request,
-                                IRootFolder $root,
-                                IUserSession $userSession,
-                                IURLGenerator $urlGenerator,
-                                IL10N $trans,
-                                LoggerInterface $logger,
-                                AppConfig $config,
-                                IManager $shareManager,
-                                PublicShareAuth $shareAuth,
+    public function __construct(IRequest         $request,
+                                IRootFolder      $root,
+                                IUserSession     $userSession,
+                                IURLGenerator    $urlGenerator,
+                                IL10N            $trans,
+                                LoggerInterface  $logger,
+                                AppConfig        $appConfig,
+                                PersonalConfig   $personalConfig,
+                                IManager         $shareManager,
+                                PublicShareAuth  $shareAuth,
                                 ILockingProvider $lockingProvider,
-                                IAppData $appData,
-                                IConfig $ncConfig,
-                                IL10NFactory $l10nFactory,
+                                IAppData         $appData,
+                                IConfig          $ncConfig,
+                                IL10NFactory     $l10nFactory,
                                 ?IVersionManager $versionManager = null
                                 )
     {
@@ -123,7 +115,8 @@ class EditorController extends Controller
         $this->urlGenerator = $urlGenerator;
         $this->trans = $trans;
         $this->logger = $logger;
-        $this->config = $config;
+        $this->appConfig = $appConfig;
+        $this->personalConfig = $personalConfig;
         $this->shareManager = $shareManager;
         $this->shareAuth = $shareAuth;
         $this->lockingProvider = $lockingProvider;
@@ -612,11 +605,20 @@ class EditorController extends Controller
             return new RedirectResponse($redirectUrl);
         }
 
-        $drawioUrl = $this->config->GetDrawioUrl();
-        $theme = $this->config->GetTheme();
-        $darkMode = $this->config->GetDarkMode();
-	    $offlineMode = $this->config->GetOfflineMode();
-        $lang = $this->config->GetLang();
+        $drawioUrl = $this->appConfig->GetDrawioUrl();
+        $theme = $this->personalConfig->GetTheme();
+        if ($theme === 'default') {
+            $theme = $this->appConfig->GetTheme();
+        }
+        $darkMode = $this->personalConfig->GetDarkMode();
+        if ($darkMode === 'auto') {
+            $darkMode = $this->appConfig->GetDarkMode();
+        }
+	    $offlineMode = $this->appConfig->GetOfflineMode();
+        $lang = $this->personalConfig->GetLang();
+        if ($lang === 'auto') {
+            $lang = $this->appConfig->GetLang();
+        }
         $lang = trim(strtolower($lang));
 
         if ("auto" === $lang)
@@ -648,14 +650,14 @@ class EditorController extends Controller
             "drawioDarkMode" => $darkMode,
             "drawioLang" => $lang,
             "drawioOfflineMode" => $offlineMode,
-            "drawioAutosave" =>$this->config->GetAutosave(),
-            "drawioLibraries" =>$this->config->GetLibraries(),
+            "drawioAutosave" =>$this->appConfig->GetAutosave(),
+            "drawioLibraries" =>$this->appConfig->GetLibraries(),
             "fileId" => $fileId,
             "shareToken" => $shareToken,
             "isWB" => $isWB,
             "drawioReadOnly" => $lightbox,
-            "drawioPreviews" => $this->config->GetPreviews(),
-            "drawioConfig" => $this->config->GetDrawioConfig(),
+            "drawioPreviews" => $this->appConfig->GetPreviews(),
+            "drawioConfig" => $this->appConfig->GetDrawioConfig(),
         ];
 
         Util::addScript(Application::APP_ID, "editor");

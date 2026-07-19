@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace OCA\Drawio\Tests\Unit\Settings;
 
-use OCA\Drawio\Settings\Section;
+use OCA\Drawio\Settings\AdminSection;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use PHPUnit\Framework\TestCase;
 
-final class SectionTest extends TestCase {
+final class AdminSectionTest extends TestCase {
 
     public function testSectionMetadata(): void {
         $l10n = $this->createMock(IL10N::class);
@@ -17,7 +17,7 @@ final class SectionTest extends TestCase {
         $urlGenerator = $this->createMock(IURLGenerator::class);
         $urlGenerator->method('imagePath')->with('drawio', 'app.svg')->willReturn('/img/app.svg');
 
-        $section = new Section($urlGenerator, $l10n);
+        $section = new AdminSection($urlGenerator, $l10n);
 
         $this->assertSame('drawio', $section->getID());
         $this->assertSame('Diagramming', $section->getName());
