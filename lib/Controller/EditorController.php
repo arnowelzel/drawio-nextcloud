@@ -16,6 +16,7 @@ namespace OCA\Drawio\Controller;
 
 use OCA\Drawio\AppConfig;
 use OCA\Drawio\AppInfo\Application;
+use OCA\Drawio\PersonalConfig;
 use OCA\Drawio\Service\PublicShareAuth;
 use OCA\Files_Versions\Versions\IVersion;
 use OCA\Files_Versions\Versions\IVersionManager;
@@ -70,7 +71,8 @@ class EditorController extends Controller
         private readonly IURLGenerator $urlGenerator,
         private readonly IL10N $trans,
         private readonly LoggerInterface $logger,
-        private readonly AppConfig $config,
+        private readonly AppConfig $appConfig,
+        private readonly PersonalConfig $personalConfig,
         private readonly IManager $shareManager,
         private readonly PublicShareAuth $shareAuth,
         private readonly ILockingProvider $lockingProvider,
@@ -440,7 +442,7 @@ class EditorController extends Controller
             ]));
         }
 
-        $drawioUrl = $this->config->GetDrawioUrl();
+        $drawioUrl = $this->appConfig->GetDrawioUrl();
         $drawioUrlArgs = '';
 
         if (str_contains($drawioUrl, '?')) {
@@ -450,18 +452,18 @@ class EditorController extends Controller
         $params = [
             'drawioUrl' => $drawioUrl,
             'drawioUrlArgs' => $drawioUrlArgs,
-            'drawioTheme' => $this->config->GetTheme(),
-            'drawioDarkMode' => $this->config->GetDarkMode(),
+            'drawioTheme' => $this->editorTheme(),
+            'drawioDarkMode' => $this->editorDarkMode(),
             'drawioLang' => $this->editorLanguage(),
-            'drawioOfflineMode' => $this->config->GetOfflineMode(),
-            'drawioAutosave' => $this->config->GetAutosave(),
-            'drawioLibraries' => $this->config->GetLibraries(),
+            'drawioOfflineMode' => $this->appConfig->GetOfflineMode(),
+            'drawioAutosave' => $this->appConfig->GetAutosave(),
+            'drawioLibraries' => $this->appConfig->GetLibraries(),
             'fileId' => $fileId,
             'shareToken' => $shareToken,
             'isWB' => $isWB,
             'drawioReadOnly' => $lightbox,
-            'drawioPreviews' => $this->config->GetPreviews(),
-            'drawioConfig' => $this->config->GetDrawioConfig(),
+            'drawioPreviews' => $this->appConfig->GetPreviews(),
+            'drawioConfig' => $this->appConfig->GetDrawioConfig(),
         ];
 
         Util::addScript(Application::APP_ID, 'editor');
@@ -495,11 +497,38 @@ class EditorController extends Controller
     }
 
     /**
-     * The editor expects a plain language code, Nextcloud may report a locale
+     * The per-user theme takes precedence, falling back to the admin default
+     */
+    private function editorTheme(): string
+    {
+        $theme = $this->personalConfig->GetTheme();
+
+        return $theme === 'default' ? $this->appConfig->GetTheme() : $theme;
+    }
+
+    /**
+     * The per-user dark mode takes precedence, falling back to the admin default
+     */
+    private function editorDarkMode(): string
+    {
+        $darkMode = $this->personalConfig->GetDarkMode();
+
+        return $darkMode === 'auto' ? $this->appConfig->GetDarkMode() : $darkMode;
+    }
+
+    /**
+     * The editor expects a plain language code, Nextcloud may report a locale.
+     * The per-user language takes precedence, falling back to the admin default.
      */
     private function editorLanguage(): string
     {
-        $lang = trim(strtolower($this->config->GetLang()));
+        $lang = $this->personalConfig->GetLang();
+
+        if ($lang === 'auto') {
+            $lang = $this->appConfig->GetLang();
+        }
+
+        $lang = trim(strtolower($lang));
 
         if ($lang !== 'auto') {
             return $lang;
