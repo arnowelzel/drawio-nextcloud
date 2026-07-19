@@ -1,5 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ *
+ * @author Pawel Rojek <pawel at pawelrojek.com>
+ * @author Ian Reinhart Geiser <igeiser at devonit.com>
+ * @author Arno Welzel <privat at arnowelzel.de>
+ *
+ * This file is licensed under the Affero General Public License version 3 or later.
+ *
+ **/
+
 namespace OCA\Drawio\Controller;
 
 use OCA\Drawio\AppConfig;
@@ -13,85 +25,71 @@ use OCP\Util;
 
 class AdminSettingsController extends Controller
 {
-    private $config;
-
-    /**
-     * @param IRequest $request - request object
-     * @param AppConfig $config - application configuration
-     */
-    public function __construct(IRequest $request,
-                                AppConfig $config
-                                )
-    {
+    public function __construct(
+        IRequest $request,
+        private readonly AppConfig $config,
+    ) {
         parent::__construct(Application::APP_ID, $request);
-
-        $this->config = $config;
     }
 
     /**
      * Config page
-     *
-     * @return TemplateResponse
      */
-    public function index() {
+    public function index(): TemplateResponse {
         $data = [
-            "drawioUrl" => $this->config->GetDrawioUrl(),
-            "drawioOfflineMode" => $this->config->GetOfflineMode(),
-            "drawioTheme" => $this->config->GetTheme(),
-            "drawioLang" => $this->config->GetLang(),
-            "drawioAutosave" => $this->config->GetAutosave(),
-            "drawioLibraries" => $this->config->GetLibraries(),
-            "drawioDarkMode" => $this->config->GetDarkMode(),
-            "drawioPreviews" => $this->config->GetPreviews(),
-            "drawioConfig" => $this->config->GetDrawioConfig(),
-            "drawioWhiteboards" => $this->config->GetWhiteboards(),
+            'drawioUrl' => $this->config->GetDrawioUrl(),
+            'drawioOfflineMode' => $this->config->GetOfflineMode(),
+            'drawioTheme' => $this->config->GetTheme(),
+            'drawioLang' => $this->config->GetLang(),
+            'drawioAutosave' => $this->config->GetAutosave(),
+            'drawioLibraries' => $this->config->GetLibraries(),
+            'drawioDarkMode' => $this->config->GetDarkMode(),
+            'drawioPreviews' => $this->config->GetPreviews(),
+            'drawioConfig' => $this->config->GetDrawioConfig(),
+            'drawioWhiteboards' => $this->config->GetWhiteboards(),
         ];
 
-        Util::addScript(Application::APP_ID, "adminSettings");
-        Util::addStyle(Application::APP_ID, "settings");
+        Util::addScript(Application::APP_ID, 'adminSettings');
+        Util::addStyle(Application::APP_ID, 'settings');
 
-        return new TemplateResponse($this->appName, "adminSettings", $data, TemplateResponse::RENDER_AS_BLANK);
+        return new TemplateResponse($this->appName, 'adminSettings', $data, TemplateResponse::RENDER_AS_BLANK);
     }
 
-	/**
-	 * Save settings
-	 */
+    /**
+     * Save settings
+     *
+     * @return array<string, string>
+     */
     #[AuthorizedAdminSetting(settings: AdminSettings::class)]
-    public function settings()
+    public function settings(): array
     {
-        $drawio = trim($this->request->getParam('drawioUrl', ''));
-        $offlinemode = trim($this->request->getParam('offlineMode', ''));
-        $theme = trim($this->request->getParam('theme', ''));
-        $lang = trim($this->request->getParam('lang', ''));
-        $autosave = trim($this->request->getParam('autosave', ''));
-        $libraries = trim($this->request->getParam('libraries', ''));
-        $darkmode = trim($this->request->getParam('darkMode', ''));
-        $previews = trim($this->request->getParam('previews', ''));
-        $drawioConfig = trim($this->request->getParam('drawioConfig', ''));
-        $whiteboards = trim($this->request->getParam('whiteboards', ''));
-
-        $this->config->SetDrawioUrl($drawio);
-        $this->config->SetOfflineMode($offlinemode);
-        $this->config->SetTheme($theme);
-        $this->config->SetLang($lang);
-        $this->config->SetAutosave($autosave);
-        $this->config->SetLibraries($libraries);
-        $this->config->SetDarkMode($darkmode);
-        $this->config->SetPreviews($previews);
-        $this->config->SetDrawioConfig($drawioConfig);
-        $this->config->SetWhiteboards($whiteboards);
+        $this->config->SetDrawioUrl($this->param('drawioUrl'));
+        $this->config->SetOfflineMode($this->param('offlineMode'));
+        $this->config->SetTheme($this->param('theme'));
+        $this->config->SetLang($this->param('lang'));
+        $this->config->SetAutosave($this->param('autosave'));
+        $this->config->SetLibraries($this->param('libraries'));
+        $this->config->SetDarkMode($this->param('darkMode'));
+        $this->config->SetPreviews($this->param('previews'));
+        $this->config->SetDrawioConfig($this->param('drawioConfig'));
+        $this->config->SetWhiteboards($this->param('whiteboards'));
 
         return [
-            "drawioUrl" => $this->config->GetDrawioUrl(),
-            "offlineMode" => $this->config->GetOfflineMode(),
-            "theme" => $this->config->GetTheme(),
-            "lang" => $this->config->GetLang(),
-            "drawioAutosave" =>$this->config->GetAutosave(),
-            "drawioLibraries" =>$this->config->GetLibraries(),
-            "drawioDarkMode" =>$this->config->GetDarkMode(),
-            "drawioPreviews" =>$this->config->GetPreviews(),
-            "drawioConfig" =>$this->config->GetDrawioConfig(),
-            "drawioWhiteboards" =>$this->config->GetWhiteboards(),
+            'drawioUrl' => $this->config->GetDrawioUrl(),
+            'offlineMode' => $this->config->GetOfflineMode(),
+            'theme' => $this->config->GetTheme(),
+            'lang' => $this->config->GetLang(),
+            'drawioAutosave' => $this->config->GetAutosave(),
+            'drawioLibraries' => $this->config->GetLibraries(),
+            'drawioDarkMode' => $this->config->GetDarkMode(),
+            'drawioPreviews' => $this->config->GetPreviews(),
+            'drawioConfig' => $this->config->GetDrawioConfig(),
+            'drawioWhiteboards' => $this->config->GetWhiteboards(),
         ];
+    }
+
+    private function param(string $name): string
+    {
+        return trim((string)$this->request->getParam($name, ''));
     }
 }

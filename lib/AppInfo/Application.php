@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  *
  * @author Pawel Rojek <pawel at pawelrojek.com>
@@ -64,11 +66,13 @@ class Application extends App implements IBootstrap {
             // getAllMappings() must be called first: it forces the detector to
             // load the default mappings, which would otherwise be skipped later
             // because registerType() marks the mapping table as initialized.
-            if (method_exists($detector, 'registerType')) {
-                $detector->getAllMappings();
-                $detector->registerType("drawio", "application/x-drawio");
-                $detector->registerType("dwb", "application/x-drawio-wb");
+            if (!method_exists($detector, 'registerType')) {
+                return;
             }
+
+            $detector->getAllMappings();
+            $detector->registerType('drawio', 'application/x-drawio');
+            $detector->registerType('dwb', 'application/x-drawio-wb');
         });
     }
 }

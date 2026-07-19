@@ -1,109 +1,105 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OCA\Drawio\Preview;
 
-use OCP\Preview\IProviderV2;
-
+use OCA\Drawio\AppConfig;
+use OCA\Drawio\AppInfo\Application;
 use OCP\Files\File;
 use OCP\Files\FileInfo;
 use OCP\Files\IAppData;
 use OCP\Files\NotFoundException;
+use OCP\Files\SimpleFS\ISimpleFile;
 use OCP\IImage;
 use OCP\Image;
+use OCP\Preview\IProviderV2;
 use Psr\Log\LoggerInterface;
-
-use OCA\Drawio\AppConfig;
-use OCA\Drawio\AppInfo\Application;
 
 class DrawioPreview implements IProviderV2
 {
-    protected $appConfig;
-    protected $logger;
-    protected $appName;
-    /** @var IAppData */
-    protected $appData;
-
     /**
-     * Capabilities mimetype
+     * MIME types this provider generates previews for
      *
-     * @var Array
+     * @var list<string>
      */
-    public static $capabilities = [
-        "application/x-drawio",
-        "application/x-drawio-wb"
+    public const CAPABILITIES = [
+        'application/x-drawio',
+        'application/x-drawio-wb',
     ];
 
-    public function __construct(LoggerInterface $logger, IAppData $appData, AppConfig $appConfig)
-    {
-        $this->logger = $logger;
-        $this->appData = $appData;
-        $this->appName = Application::APP_ID;
-        $this->appConfig = $appConfig;
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly IAppData $appData,
+        private readonly AppConfig $appConfig,
+    ) {
     }
 
     /**
-     * Return mime type
+     * Regular expression matching every MIME type this provider handles
      */
-    public static function getMimeTypeRegex() {
-        $mimeTypeRegex = "";
-        foreach (self::$capabilities as $format) {
-            if (!empty($mimeTypeRegex)) {
-                $mimeTypeRegex = $mimeTypeRegex . "|";
-            }
-            $mimeTypeRegex = $mimeTypeRegex . str_replace("/", "\/", $format);
-        }
-        $mimeTypeRegex = "/" . $mimeTypeRegex . "/";
+    public static function getMimeTypeRegex(): string
+    {
+        $quoted = array_map(
+            static fn (string $mimeType): string => str_replace('/', '\/', $mimeType),
+            self::CAPABILITIES
+        );
 
-        return $mimeTypeRegex;
+        return '/' . implode('|', $quoted) . '/';
     }
 
     public function getMimeType(): string
     {
-        $m = self::getMimeTypeRegex();
-        return $m;
+        return self::getMimeTypeRegex();
     }
 
     public function isAvailable(FileInfo $file): bool
     {
-        $prevFile = $this->getPreviewFile($file->getId());
-        return ($this->appConfig->GetPreviews() === 'yes') && $prevFile !== false &&
-            $prevFile->getMtime() >= $file->getMtime();
+        $preview = $this->getPreviewFile($file->getId());
+
+        return $this->appConfig->GetPreviews() === 'yes'
+            && $preview !== null
+            && $preview->getMtime() >= $file->getMtime();
     }
 
     public function getThumbnail(File $file, int $maxX, int $maxY): ?IImage
     {
+        if ($this->appConfig->GetPreviews() !== 'yes') {
+            return null;
+        }
+
         $thumbnail = $this->getPreviewFile($file->getId());
 
-        if ($this->appConfig->GetPreviews() === 'no' || $thumbnail === false) {
+        if ($thumbnail === null) {
             return null;
         }
 
         $image = new Image();
         $image->loadFromData($thumbnail->getContent());
 
-        if ($image->valid()) {
-            $image->scaleDownToFit($maxX, $maxY);
-            return $image;
+        if (!$image->valid()) {
+            return null;
         }
 
-        return null;
+        $image->scaleDownToFit($maxX, $maxY);
+
+        return $image;
     }
 
-    private function getPreviewFile($fileId)
+    private function getPreviewFile(int $fileId): ?ISimpleFile
     {
-        try
-        {
+        try {
             return $this->appData->getFolder('previews')->getFile($fileId . '.png');
-        }
-        catch (NotFoundException $e)
-        {
-            // ignore
-            return false;
-        }
-        catch (\Exception $e)
-        {
-            $this->logger->error($e->getMessage(), ["message" => "Can't get preview file", "app" => $this->appName, 'exception' => $e]);
-            return false;
+        } catch (NotFoundException) {
+            return null;
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage(), [
+                'message' => "Can't get preview file",
+                'app' => Application::APP_ID,
+                'exception' => $e,
+            ]);
+
+            return null;
         }
     }
 }

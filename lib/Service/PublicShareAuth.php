@@ -18,21 +18,32 @@ use OCP\Share\IShare;
 class PublicShareAuth {
 
     public function __construct(
-        private ISession $session,
+        private readonly ISession $session,
     ) {
     }
 
     public function isAuthenticated(IShare $share): bool {
-        if ($share->getPassword() === null) {
+        $password = $share->getPassword();
+
+        if ($password === null) {
             return true;
         }
 
+        return ($this->authenticatedTokens()[$share->getToken()] ?? '') === $password;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function authenticatedTokens(): array {
         $allowedTokensJson = $this->session->get(PublicShareController::DAV_AUTHENTICATED_FRONTEND);
-        $allowedTokens = is_string($allowedTokensJson) ? json_decode($allowedTokensJson, true) : null;
-        if (!is_array($allowedTokens)) {
-            $allowedTokens = [];
+
+        if (!is_string($allowedTokensJson)) {
+            return [];
         }
 
-        return ($allowedTokens[$share->getToken()] ?? '') === $share->getPassword();
+        $allowedTokens = json_decode($allowedTokensJson, true);
+
+        return is_array($allowedTokens) ? $allowedTokens : [];
     }
 }

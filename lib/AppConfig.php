@@ -1,5 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ *
+ * @author Pawel Rojek <pawel at pawelrojek.com>
+ * @author Ian Reinhart Geiser <igeiser at devonit.com>
+ *
+ * This file is licensed under the Affero General Public License version 3 or later.
+ *
+ **/
+
 namespace OCA\Drawio;
 
 use OCA\Drawio\AppInfo\Application;
@@ -8,186 +19,176 @@ use Psr\Log\LoggerInterface;
 
 class AppConfig {
 
-    private $predefDrawioUrl = "https://embed.diagrams.net";
-    private $predefOfflineMode = "no";
-    private $predefTheme = "kennedy"; //kennedy, min (=minimal), atlas, simple
-    private $predefLang = "auto";
-    private $predefAutosave = "yes";
-    private $predefLibraries = "no";
-    private $predefDarkMode = "auto";
-    private $predefPreviews = "yes";
-    private $predefWhiteboards = "yes";
+    private const DEFAULT_DRAWIO_URL = 'https://embed.diagrams.net';
+    private const DEFAULT_OFFLINE_MODE = 'no';
+    /** kennedy, min (=minimal), atlas, simple */
+    private const DEFAULT_THEME = 'kennedy';
+    private const DEFAULT_LANG = 'auto';
+    private const DEFAULT_AUTOSAVE = 'yes';
+    private const DEFAULT_LIBRARIES = 'no';
+    private const DEFAULT_DARK_MODE = 'auto';
+    private const DEFAULT_PREVIEWS = 'yes';
+    private const DEFAULT_WHITEBOARDS = 'yes';
 
-    // The config keys
-    private $_drawioUrl = "DrawioUrl";
-    private $_offlinemode = "DrawioOffline";
-    private $_theme = "DrawioTheme";
-    private $_lang = "DrawioLang";
-    private $_autosave = "DrawioAutosave";
-    private $_libraries = "DrawioLibraries";
-    private $_darkmode = "DrawioDarkMode";
-    private $_previews = "DrawioPreviews";
-    private $_drawioConfig = "DrawioConfig";
-    private $_whiteboards = "DrawioWhiteboards";
+    private const KEY_DRAWIO_URL = 'DrawioUrl';
+    private const KEY_OFFLINE_MODE = 'DrawioOffline';
+    private const KEY_THEME = 'DrawioTheme';
+    private const KEY_LANG = 'DrawioLang';
+    private const KEY_AUTOSAVE = 'DrawioAutosave';
+    private const KEY_LIBRARIES = 'DrawioLibraries';
+    private const KEY_DARK_MODE = 'DrawioDarkMode';
+    private const KEY_PREVIEWS = 'DrawioPreviews';
+    private const KEY_DRAWIO_CONFIG = 'DrawioConfig';
+    private const KEY_WHITEBOARDS = 'DrawioWhiteboards';
+
+    /**
+     * The default URL was changed from draw.io to embed.diagrams.net (#118)
+     */
+    private const LEGACY_DRAWIO_URLS = [
+        'https://draw.io',
+        'https://www.draw.io',
+        'http://draw.io',
+        'http://www.draw.io',
+    ];
 
     public function __construct(
-        private IAppConfig $config,
-        private LoggerInterface $logger,
+        private readonly IAppConfig $config,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
-    public function SetDrawioUrl($drawio)
+    public function SetDrawioUrl(string $drawio): void
     {
         $drawio = strtolower(trim($drawio));
-        if (strlen($drawio) > 0 && !preg_match("/^https?:\/\//i", $drawio)) $drawio = "http://" . $drawio;
-        $this->logger->info("SetDrawioUrl: " . $drawio, ["app" => Application::APP_ID]);
-        $this->config->setAppValueString($this->_drawioUrl, $drawio);
-    }
 
-    public function GetDrawioUrl()
-    {
-        $val = $this->config->getAppValueString($this->_drawioUrl);
-        if (empty($val)) $val = $this->predefDrawioUrl;
-        //default URL changed from draw.io to embed.diagrams.net #118
-        if (in_array(strtolower($val), ["https://draw.io", "https://www.draw.io", "http://draw.io", "http://www.draw.io"])) $val = $this->predefDrawioUrl;
-        return $val;
-    }
-
-
-    public function SetOfflineMode($offlinemode)
-    {
-        $offlinemode = (string)$offlinemode;
-        $this->logger->info("SetOfflineMode: " . $offlinemode, ["app" => Application::APP_ID]);
-        $this->config->setAppValueString($this->_offlinemode, $offlinemode);
-    }
-
-    public function GetOfflineMode()
-    {
-        $val = $this->config->getAppValueString($this->_offlinemode);
-        if (empty($val)) $val = $this->predefOfflineMode;
-        return $val;
-    }
-
-    public function SetTheme($theme)
-    {
-        $this->logger->info("SetTheme: " . $theme, ["app" => Application::APP_ID]);
-        $this->config->setAppValueString($this->_theme, $theme);
-    }
-
-    public function GetTheme()
-    {
-        $val = $this->config->getAppValueString($this->_theme);
-        if (empty($val)) $val = $this->predefTheme;
-        return $val;
-    }
-
-    public function SetLang($lang)
-    {
-        $this->logger->info("SetLang: " . $lang, ["app" => Application::APP_ID]);
-        $this->config->setAppValueString($this->_lang, $lang);
-    }
-
-    public function GetLang()
-    {
-        $val = $this->config->getAppValueString($this->_lang);
-        if (empty($val)) $val = $this->predefLang;
-        return $val;
-    }
-
-    public function SetAutosave($autosave)
-    {
-        $this->logger->info("SetAutosave: " . $autosave, ["app" => Application::APP_ID]);
-        $this->config->setAppValueString($this->_autosave, $autosave);
-    }
-
-    public function GetAutosave()
-    {
-        $val = $this->config->getAppValueString($this->_autosave);
-        if (empty($val)) $val = $this->predefAutosave;
-        return $val;
-    }
-
-    public function SetLibraries($libraries)
-    {
-        $this->logger->info("SetLibraries: " . $libraries, ["app" => Application::APP_ID]);
-        $this->config->setAppValueString($this->_libraries, $libraries);
-    }
-
-    public function GetLibraries()
-    {
-        $val = $this->config->getAppValueString($this->_libraries);
-        if (empty($val)) $val = $this->predefLibraries;
-        return $val;
-    }
-
-    public function SetDarkMode($darkmode)
-    {
-        $this->logger->info("SetDarkMode: " . $darkmode, ["app" => Application::APP_ID]);
-        $this->config->setAppValueString($this->_darkmode, $darkmode);
-    }
-
-    public function GetDarkMode()
-    {
-        $val = $this->config->getAppValueString($this->_darkmode);
-        if (empty($val))
-        {
-            if ($this->GetTheme() == "dark")
-            {
-                $val = "yes";
-            }
-            else
-            {
-                $val = $this->predefDarkMode;
-            }
+        if ($drawio !== '' && preg_match('/^https?:\/\//i', $drawio) !== 1) {
+            $drawio = 'http://' . $drawio;
         }
-        return $val;
+
+        $this->set(self::KEY_DRAWIO_URL, $drawio);
     }
 
-    public function SetPreviews($previews)
+    public function GetDrawioUrl(): string
     {
-        $this->logger->info("SetPreviews: " . $previews, ["app" => Application::APP_ID]);
-        $this->config->setAppValueString($this->_previews, $previews);
-    }
+        $val = $this->config->getAppValueString(self::KEY_DRAWIO_URL);
 
-    public function GetPreviews()
-    {
-        $val = $this->config->getAppValueString($this->_previews);
-        if (empty($val)) $val = $this->predefPreviews;
-        return $val;
-    }
-
-    public function SetWhiteboards($whiteboards)
-    {
-        $this->logger->info("SetWhiteboards: " . $whiteboards, ["app" => Application::APP_ID]);
-        $this->config->setAppValueString($this->_whiteboards, $whiteboards);
-    }
-
-    public function GetWhiteboards()
-    {
-        $val = $this->config->getAppValueString($this->_whiteboards);
-        if (empty($val)) $val = $this->predefWhiteboards;
-        return $val;
-    }
-
-    public function SetDrawioConfig($drawioConfig)
-    {
-        $this->logger->info("SetDrawioConfig: " . $drawioConfig, ["app" => Application::APP_ID]);
-        // Check if the json is valid
-        $val = json_decode($drawioConfig);
-        $this->config->setAppValueString($this->_drawioConfig, empty($val)? "" : $drawioConfig);
-    }
-
-    public function GetDrawioConfig()
-    {
-        $val = $this->config->getAppValueString($this->_drawioConfig);
-
-        if (empty(json_decode($val)))
-        {
-            return "{}";
+        if ($val === '' || in_array(strtolower($val), self::LEGACY_DRAWIO_URLS, true)) {
+            return self::DEFAULT_DRAWIO_URL;
         }
-        else
-        {
+
+        return $val;
+    }
+
+    public function SetOfflineMode(string $offlinemode): void
+    {
+        $this->set(self::KEY_OFFLINE_MODE, $offlinemode);
+    }
+
+    public function GetOfflineMode(): string
+    {
+        return $this->get(self::KEY_OFFLINE_MODE, self::DEFAULT_OFFLINE_MODE);
+    }
+
+    public function SetTheme(string $theme): void
+    {
+        $this->set(self::KEY_THEME, $theme);
+    }
+
+    public function GetTheme(): string
+    {
+        return $this->get(self::KEY_THEME, self::DEFAULT_THEME);
+    }
+
+    public function SetLang(string $lang): void
+    {
+        $this->set(self::KEY_LANG, $lang);
+    }
+
+    public function GetLang(): string
+    {
+        return $this->get(self::KEY_LANG, self::DEFAULT_LANG);
+    }
+
+    public function SetAutosave(string $autosave): void
+    {
+        $this->set(self::KEY_AUTOSAVE, $autosave);
+    }
+
+    public function GetAutosave(): string
+    {
+        return $this->get(self::KEY_AUTOSAVE, self::DEFAULT_AUTOSAVE);
+    }
+
+    public function SetLibraries(string $libraries): void
+    {
+        $this->set(self::KEY_LIBRARIES, $libraries);
+    }
+
+    public function GetLibraries(): string
+    {
+        return $this->get(self::KEY_LIBRARIES, self::DEFAULT_LIBRARIES);
+    }
+
+    public function SetDarkMode(string $darkmode): void
+    {
+        $this->set(self::KEY_DARK_MODE, $darkmode);
+    }
+
+    public function GetDarkMode(): string
+    {
+        $val = $this->config->getAppValueString(self::KEY_DARK_MODE);
+
+        if ($val !== '') {
             return $val;
         }
+
+        // The dark theme was replaced by a dedicated dark mode setting
+        return $this->GetTheme() === 'dark' ? 'yes' : self::DEFAULT_DARK_MODE;
+    }
+
+    public function SetPreviews(string $previews): void
+    {
+        $this->set(self::KEY_PREVIEWS, $previews);
+    }
+
+    public function GetPreviews(): string
+    {
+        return $this->get(self::KEY_PREVIEWS, self::DEFAULT_PREVIEWS);
+    }
+
+    public function SetWhiteboards(string $whiteboards): void
+    {
+        $this->set(self::KEY_WHITEBOARDS, $whiteboards);
+    }
+
+    public function GetWhiteboards(): string
+    {
+        return $this->get(self::KEY_WHITEBOARDS, self::DEFAULT_WHITEBOARDS);
+    }
+
+    public function SetDrawioConfig(string $drawioConfig): void
+    {
+        // Only store valid JSON
+        $this->set(self::KEY_DRAWIO_CONFIG, empty(json_decode($drawioConfig)) ? '' : $drawioConfig);
+    }
+
+    public function GetDrawioConfig(): string
+    {
+        $val = $this->config->getAppValueString(self::KEY_DRAWIO_CONFIG);
+
+        return empty(json_decode($val)) ? '{}' : $val;
+    }
+
+    private function get(string $key, string $default): string
+    {
+        $val = $this->config->getAppValueString($key);
+
+        return $val === '' ? $default : $val;
+    }
+
+    private function set(string $key, string $value): void
+    {
+        $this->logger->info('Setting ' . $key . ': ' . $value, ['app' => Application::APP_ID]);
+        $this->config->setAppValueString($key, $value);
     }
 }

@@ -11,7 +11,7 @@
         $frame_params .= "&libraries=1";
     }
 
-    if ($_['isWB'] == "true")
+    if ($_["isWB"])
     {
         $frame_params .= "&ui=sketch";
     }

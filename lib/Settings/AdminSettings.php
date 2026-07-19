@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  *
  * @author Pawel Rojek <pawel at pawelrojek.com>
@@ -11,19 +13,16 @@
 
 namespace OCA\Drawio\Settings;
 
+use OCA\Drawio\AppInfo\Application;
+use OCA\Drawio\Controller\AdminSettingsController;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Settings\IDelegatedSettings;
 
-use OCA\Drawio\Controller\AdminSettingsController;
-
-
 class AdminSettings implements IDelegatedSettings {
 
-    private AdminSettingsController $settingsController;
-
-    public function __construct(AdminSettingsController $settingsController)
-    {
-        $this->settingsController = $settingsController;
+    public function __construct(
+        private readonly AdminSettingsController $settingsController,
+    ) {
     }
 
     public function getName(): ?string {
@@ -32,22 +31,19 @@ class AdminSettings implements IDelegatedSettings {
 
     public function getAuthorizedAppConfig(): array {
         return [
-            'drawio' => ['/drawio.*/'],
+            Application::APP_ID => ['/drawio.*/'],
         ];
     }
 
-    public function getForm(): TemplateResponse
-    {
+    public function getForm(): TemplateResponse {
         return $this->settingsController->index();
     }
 
-    public function getSection()
-    {
-        return "drawio";
+    public function getSection(): string {
+        return Application::APP_ID;
     }
 
-    public function getPriority()
-    {
+    public function getPriority(): int {
         return 60;
     }
 }

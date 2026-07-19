@@ -514,7 +514,7 @@ $(async function () {
         var originUrl = drawioData['drawioUrl'];
         var drawIoUrl = drawioData['drawioUrl'] + drawioData['frame_params'];
         var autosave = drawioData['finalAutosave'] == 'yes';
-        var isWB = drawioData['isWB'] == 'true';
+        var isWB = drawioData['isWB'] === true || drawioData['isWB'] === 'true';
         var previews = drawioData['drawioPreviews'] == 'yes';
 
         if (drawioData['drawioDarkMode'] == 'auto')

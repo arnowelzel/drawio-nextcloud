@@ -96,7 +96,7 @@ final class DrawioReferenceProviderTest extends TestCase {
     public function testResolveReferenceBuildsRichObjectForOwnFile(): void {
         $this->loginAs();
         $userFolder = $this->createMock(Folder::class);
-        $userFolder->method('getById')->with(97)->willReturn([$this->createFile()]);
+        $userFolder->method('getFirstNodeById')->with(97)->willReturn($this->createFile());
         $this->rootFolder->method('getUserFolder')->with('admin')->willReturn($userFolder);
 
         $url = 'https://nc.example.com/apps/drawio/edit?fileId=97';
@@ -132,7 +132,7 @@ final class DrawioReferenceProviderTest extends TestCase {
     public function testResolveReferenceReturnsNullForUnknownFile(): void {
         $this->loginAs();
         $userFolder = $this->createMock(Folder::class);
-        $userFolder->method('getById')->willReturn([]);
+        $userFolder->method('getFirstNodeById')->willReturn(null);
         $this->rootFolder->method('getUserFolder')->willReturn($userFolder);
 
         $reference = $this->createProvider()->resolveReference('https://nc.example.com/apps/drawio/edit?fileId=404');

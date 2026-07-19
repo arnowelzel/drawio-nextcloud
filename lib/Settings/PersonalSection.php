@@ -1,35 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OCA\Drawio\Settings;
 
+use OCA\Drawio\AppInfo\Application;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Settings\IIconSection;
 
 class PersonalSection implements IIconSection {
-	/** @var IURLGenerator */
-	private $url;
-	/** @var IL10N */
-	private $l10n;
 
-	public function __construct(IURLGenerator $url, IL10N $l10n) {
-		$this->url = $url;
-		$this->l10n = $l10n;
+	public function __construct(
+		private readonly IURLGenerator $url,
+		private readonly IL10N $l10n,
+	) {
 	}
 
-	public function getID() {
-		return 'drawio';
+	public function getID(): string {
+		return Application::APP_ID;
 	}
 
-	public function getName() {
+	public function getName(): string {
 		return $this->l10n->t('Diagramming');
 	}
 
-	public function getPriority() {
+	public function getPriority(): int {
 		return 75;
 	}
 
-	public function getIcon() {
-		return $this->url->imagePath('drawio', 'app.svg');
+	public function getIcon(): string {
+		return $this->url->imagePath(Application::APP_ID, 'app.svg');
 	}
 }

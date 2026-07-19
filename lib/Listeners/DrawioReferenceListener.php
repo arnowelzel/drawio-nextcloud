@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OCA\Drawio\Listeners;
 
 use OCA\Drawio\AppInfo\Application;
@@ -9,12 +11,14 @@ use OCP\EventDispatcher\IEventListener;
 use OCP\Util;
 
 /**
+ * Loads the reference widget script when rich text references are rendered.
+ *
  * @template-implements IEventListener<RenderReferenceEvent>
  */
 class DrawioReferenceListener implements IEventListener {
 
     public function handle(Event $event): void {
-        if (!$event instanceof RenderReferenceEvent) {
+        if (!($event instanceof RenderReferenceEvent)) {
             return;
         }
 
