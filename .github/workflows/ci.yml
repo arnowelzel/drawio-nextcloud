@@ -104,3 +104,63 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    name: end-to-end (Nextcloud 33)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Start Nextcloud
+        run: docker compose up -d
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-progress
+
+      - name: Wait for Nextcloud
+        run: |
+          for i in $(seq 1 60); do
+            if curl -s http://localhost:8088/status.php | grep -q '"installed":true'; then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Nextcloud did not come up in time"
+          docker compose logs nextcloud | tail -50
+          exit 1
+
+      - name: Enable drawio app
+        run: |
+          docker compose exec -T -u 33 nextcloud php occ app:enable drawio
+          # occ runs in its own process while Nextcloud caches the list of
+          # enabled apps in APCu, which the web server does not share. Without
+          # this restart the web tier can still consider the app disabled, which
+          # makes every authenticated app route answer 404.
+          docker compose restart nextcloud
+
+      - name: Wait for the app to be served
+        run: |
+          for i in $(seq 1 40); do
+            if curl -s -u admin:admin "http://localhost:8088/index.php/apps/drawio/edit?fileId=1" | grep -q iframeEditor; then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "The drawio app did not become reachable"
+          docker compose exec -T -u 33 nextcloud php occ app:list | head -40
+          exit 1
+
+      - name: Run end-to-end tests
+        run: composer run test:e2e
+        env:
+          NEXTCLOUD_E2E_BASE_URL: http://localhost:8088
+
+      - name: Nextcloud log on failure
+        if: failure()
+        run: docker compose exec -T -u 33 nextcloud tail -n 100 data/nextcloud.log || true

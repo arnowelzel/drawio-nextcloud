@@ -36,8 +36,8 @@ css/               Stylesheets (editor, settings)
 img/               SVG icons (app, app-dark, drawio file type, whiteboard)
 l10n/              Translations (~100 languages, managed in-repo)
 scripts/           Build/maintenance scripts (extract-strings.js, dev-setup.sh, dev-rebuild.sh)
-tests/             PHPUnit unit tests (tests/unit) and psalm stubs (tests/stubs)
-.github/workflows/ CI: lint/psalm/phpunit/build (ci.yml), release pipeline (release.yml), stale bot (stale.yml)
+tests/             PHPUnit unit tests (tests/unit), end-to-end tests (tests/e2e), harness (tests/support) and psalm stubs (tests/stubs)
+.github/workflows/ CI: lint/psalm/phpunit/e2e/build (ci.yml), release pipeline (release.yml), stale bot (stale.yml)
 ```
 
 ## Build & Development
@@ -59,6 +59,7 @@ composer update         # Install PHP dev tooling (nextcloud/ocp, psalm, phpunit
 composer run lint       # php -l over lib/, appinfo/, templates/, tests/
 composer run psalm      # Static analysis against the nextcloud/ocp API
 composer run test:unit  # PHPUnit unit tests (tests/unit)
+composer run test:e2e   # PHPUnit end-to-end tests (tests/e2e) against a running instance
 ```
 To check against Nextcloud 34 instead of 33: `composer require --dev nextcloud/ocp:dev-stable34` then `composer run psalm` (CI runs both).
 
@@ -70,6 +71,7 @@ xmllint --noout --schema /tmp/info.xsd appinfo/info.xml
 
 ### Test suite layout
 - `tests/unit/` — PHPUnit tests, one test class per production class. Covers EditorController (load/save/create/index/versions incl. locking, ETag conflicts and share permissions), SettingsController, AppConfig, PublicShareAuth, DrawioReferenceProvider, DrawioPreview, all listeners, both MIME repair steps, the Settings classes and appinfo/info.xml invariants (version sync with package.json, repair-step element names).
+- `tests/e2e/` — end-to-end tests over HTTP against a **running** Nextcloud (start with `./scripts/dev-setup.sh`; the whole suite skips if the instance is unreachable). Configuration via `NEXTCLOUD_E2E_BASE_URL` (default `http://localhost:8088`), `NEXTCLOUD_E2E_ADMIN_USER`/`NEXTCLOUD_E2E_ADMIN_PASSWORD` (default admin/admin). Covers WebDAV MIME detection, load/save round trips with ETag conflicts, previews, versions, the editor page CSP, the full anonymous password-share flow (deny → wrong password → authenticate → read → editable-share write) and the settings/whiteboards toggle via the templates API. Authenticated calls use cookie-less basic auth + the `OCS-APIRequest: true` header (passes the CSRF check); the anonymous share flow uses a real cookie jar + the `data-requesttoken` scraped from the share page. Admin language is pinned to `en` so message assertions are deterministic. From another container, target `http://host.docker.internal:8088` (a trusted domain in docker-compose.yml).
 - `tests/support/` — runtime shims that make OCP static helpers work without a server: `legacy-oc.php` (minimal `OC`, `OC_Util`, `OC\AppScriptDependency`, `OC\Hooks\Emitter`), `FakeServerContainer` (installed as `\OC::$server`), `ResetsGlobalState` trait (resets `\OCP\Util` script registries between tests).
 - `tests/doubles` equivalents live in `tests/support/oca-doubles.php` — real (not psalm-only) declarations of `OCA\Files\Event\LoadAdditionalScriptsEvent`, `OCA\Files_Sharing\Event\BeforeTemplateRenderedEvent` and the `OCA\Files_Versions` interfaces, mirroring server stable33.
 - `tests/stubs/*.phpstub` — psalm-only stubs; keep them in sync with oca-doubles.php when server APIs change.
@@ -83,7 +85,7 @@ npm ci
 ```
 Then open http://localhost:8088 (admin / admin). PHP changes are live (volume-mounted); JS changes require `npm run build`.
 
-**Important:** Do not change the app version in `info.xml` during development — it will break the Nextcloud instance.
+**Important:** Do not change the app version in `info.xml` during development — Nextcloud disables the app until the upgrade is applied, and the e2e suite then fails with confusing 403/404 errors. After a version bump, run `docker compose exec -u 33 nextcloud php occ upgrade` before testing again.
 
 ## Architecture
 
