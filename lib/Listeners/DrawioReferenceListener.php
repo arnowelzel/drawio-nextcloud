@@ -1,5 +1,4 @@
 <?php
-
 namespace OCA\Drawio\Listeners;
 
 use OCA\Drawio\AppInfo\Application;
@@ -13,7 +12,8 @@ use OCP\Util;
  */
 class DrawioReferenceListener implements IEventListener {
 
-    public function handle(Event $event): void {
+    public function handle(Event $event): void
+    {
         if (!$event instanceof RenderReferenceEvent) {
             return;
         }

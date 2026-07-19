@@ -1,17 +1,16 @@
 <?php
-
 namespace OCA\Drawio\Migration;
 
 use OCP\Migration\IOutput;
 
 class RegisterMimeType extends MimeTypeMigration
 {
-    public function getName()
+    public function getName(): string
     {
         return 'Register MIME types for Diagramming';
     }
 
-    private function registerForExistingFiles()
+    private function registerForExistingFiles(): void
     {
         $mimeTypeId = $this->mimeTypeLoader->getId('application/x-drawio');
         $this->mimeTypeLoader->updateFilecache('drawio', $mimeTypeId);
@@ -20,7 +19,7 @@ class RegisterMimeType extends MimeTypeMigration
         $this->mimeTypeLoader->updateFilecache('dwb', $mimeTypeId);
     }
 
-    private function registerForNewFiles()
+    private function registerForNewFiles(): void
     {
         $configDir = \OC::$configDir;
         $mimetypealiasesFile = $configDir . self::CUSTOM_MIMETYPEALIASES;
@@ -36,7 +35,7 @@ class RegisterMimeType extends MimeTypeMigration
         ]);
     }
 
-    public function run(IOutput $output)
+    public function run(IOutput $output): void
     {
         $output->info('Registering the mimetype...');
 
@@ -49,7 +48,8 @@ class RegisterMimeType extends MimeTypeMigration
         $output->info('The mimetype was successfully registered.');
     }
 
-    private function appendToFile(string $filename, array $data) {
+    private function appendToFile(string $filename, array $data): void
+    {
         $obj = [];
         if (file_exists($filename)) {
             $content = file_get_contents($filename);

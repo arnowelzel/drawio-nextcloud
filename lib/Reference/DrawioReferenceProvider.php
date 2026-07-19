@@ -1,5 +1,4 @@
 <?php
-
 namespace OCA\Drawio\Reference;
 
 use OCP\Collaboration\Reference\ADiscoverableReferenceProvider;
@@ -8,14 +7,15 @@ use OCP\Collaboration\Reference\IReference;
 use OCP\Collaboration\Reference\Reference;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
+use OCP\Files\NotFoundException;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
 use OCP\Share\IManager as IShareManager;
 use Psr\Log\LoggerInterface;
 
-class DrawioReferenceProvider extends ADiscoverableReferenceProvider implements ISearchableReferenceProvider {
-
+class DrawioReferenceProvider extends ADiscoverableReferenceProvider implements ISearchableReferenceProvider
+{
     private const RICH_OBJECT_TYPE = 'drawio_diagram';
 
     public function __construct(
@@ -28,29 +28,35 @@ class DrawioReferenceProvider extends ADiscoverableReferenceProvider implements 
     ) {
     }
 
-    public function getId(): string {
+    public function getId(): string
+    {
         return 'drawio-diagram';
     }
 
-    public function getTitle(): string {
+    public function getTitle(): string
+    {
         return $this->l10n->t('Diagrams');
     }
 
-    public function getOrder(): int {
+    public function getOrder(): int
+    {
         return 10;
     }
 
-    public function getIconUrl(): string {
+    public function getIconUrl(): string
+    {
         return $this->urlGenerator->getAbsoluteURL(
             $this->urlGenerator->imagePath('drawio', 'app.svg')
         );
     }
 
-    public function getSupportedSearchProviderIds(): array {
+    public function getSupportedSearchProviderIds(): array
+    {
         return ['files'];
     }
 
-    public function matchReference(string $referenceText): bool {
+    public function matchReference(string $referenceText): bool
+    {
         $baseUrl = $this->urlGenerator->getAbsoluteURL('/apps/drawio/edit');
         $baseUrlIndex = $this->urlGenerator->getAbsoluteURL('/index.php/apps/drawio/edit');
 
@@ -58,7 +64,8 @@ class DrawioReferenceProvider extends ADiscoverableReferenceProvider implements 
             || str_starts_with($referenceText, $baseUrlIndex);
     }
 
-    public function resolveReference(string $referenceText): ?IReference {
+    public function resolveReference(string $referenceText): ?IReference
+    {
         if (!$this->matchReference($referenceText)) {
             return null;
         }
@@ -95,22 +102,29 @@ class DrawioReferenceProvider extends ADiscoverableReferenceProvider implements 
         }
     }
 
-    public function getCachePrefix(string $referenceId): string {
+    public function getCachePrefix(string $referenceId): string
+    {
         $params = $this->parseUrlParams($referenceId);
         return ($params['fileId'] ?? '') . '-' . ($params['shareToken'] ?? '');
     }
 
-    public function getCacheKey(string $referenceId): ?string {
+    public function getCacheKey(string $referenceId): ?string
+    {
         return null;
     }
 
-    private function parseUrlParams(string $url): array {
+    private function parseUrlParams(string $url): array
+    {
         $query = parse_url($url, PHP_URL_QUERY) ?? '';
         parse_str($query, $params);
         return $params;
     }
 
-    private function resolveWithShareToken(string $referenceText, int $fileId, string $shareToken): ?IReference {
+    /**
+     * @throws NotFoundException
+     */
+    private function resolveWithShareToken(string $referenceText, int $fileId, string $shareToken): ?IReference
+    {
         try {
             $share = $this->shareManager->getShareByToken($shareToken);
         } catch (\Exception $e) {
@@ -129,7 +143,8 @@ class DrawioReferenceProvider extends ADiscoverableReferenceProvider implements 
         return $this->buildReference($referenceText, $node);
     }
 
-    private function buildReference(string $referenceText, $file): IReference {
+    private function buildReference(string $referenceText, $file): IReference
+    {
         $reference = new Reference($referenceText);
         $reference->setTitle($file->getName());
         $reference->setDescription($this->l10n->t('Diagram'));

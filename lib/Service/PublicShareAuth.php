@@ -1,7 +1,4 @@
 <?php
-
-declare(strict_types=1);
-
 namespace OCA\Drawio\Service;
 
 use OCP\AppFramework\PublicShareController;
@@ -15,14 +12,16 @@ use OCP\Share\IShare;
  * the session stores a JSON map of share token to password hash under
  * {@see PublicShareController::DAV_AUTHENTICATED_FRONTEND}.
  */
-class PublicShareAuth {
-
+class PublicShareAuth
+{
     public function __construct(
         private ISession $session,
-    ) {
+    )
+    {
     }
 
-    public function isAuthenticated(IShare $share): bool {
+    public function isAuthenticated(IShare $share): bool
+    {
         if ($share->getPassword() === null) {
             return true;
         }

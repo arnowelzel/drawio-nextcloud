@@ -1,5 +1,4 @@
 <?php
-
 namespace OCA\Drawio\Migration;
 
 use OCP\Migration\IOutput;
