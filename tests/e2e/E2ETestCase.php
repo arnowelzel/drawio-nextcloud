@@ -42,10 +42,40 @@ abstract class E2ETestCase extends TestCase {
             self::markTestSkipped('Nextcloud e2e instance is not reachable at ' . self::$baseUrl . ': ' . $e->getMessage());
         }
 
+        self::assertAppIsServed();
+
         // Pin the admin language so message assertions are deterministic
         self::apiClient()->put('/ocs/v2.php/cloud/users/' . self::$adminUser, [
             'form_params' => ['key' => 'language', 'value' => 'en'],
         ]);
+    }
+
+    /**
+     * The instance is up, but is it actually serving this app?
+     *
+     * Nextcloud answers 404 on the app routes when the app is not enabled for
+     * the user, and the web server can lag behind an "occ app:enable" because
+     * the enabled apps are cached in APCu, which occ does not share. Checking
+     * once here turns that into one clear message instead of every test in the
+     * suite failing with an unexplained 404.
+     */
+    private static function assertAppIsServed(): void {
+        $response = self::apiClient()->get('/index.php/apps/drawio/edit', [
+            'query' => ['fileId' => 1],
+            'headers' => ['Accept' => 'text/html'],
+        ]);
+
+        if ($response->getStatusCode() === 200 && str_contains((string)$response->getBody(), 'iframeEditor')) {
+            return;
+        }
+
+        self::fail(sprintf(
+            'The drawio app is not served at %s (HTTP %d for /apps/drawio/edit). '
+            . 'Enable it with "occ app:enable drawio"; if it was just enabled, the web server may still '
+            . 'have the previous app list cached in APCu and needs a restart.',
+            self::$baseUrl,
+            $response->getStatusCode()
+        ));
     }
 
     public static function tearDownAfterClass(): void {
