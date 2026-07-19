@@ -62,32 +62,6 @@ class PersonalConfig {
         return $val;
     }
 
-    public function SetAutosave($autosave)
-    {
-        $this->logger->info("SetAutosave: " . $autosave, array("app" => $this->appName));
-        $this->config->setUserValue($this->UID, $this->appName, $this->_autosave, $autosave);
-    }
-
-    public function GetAutosave()
-    {
-        $val = $this->config->getUserValue($this->UID, $this->appName, $this->_autosave);
-        if (empty($val)) $val = $this->predefAutosave;
-        return $val;
-    }
-
-    public function SetLibraries($libraries)
-    {
-        $this->logger->info("SetLibraries: " . $libraries, array("app" => $this->appName));
-        $this->config->setUserValue($this->UID, $this->appName, $this->_libraries, $libraries);
-    }
-
-    public function GetLibraries()
-    {
-        $val = $this->config->getUserValue($this->UID, $this->appName, $this->_libraries);
-        if (empty($val)) $val = $this->predefLibraries;
-        return $val;
-    }
-
     public function SetDarkMode($darkmode)
     {
         $this->logger->info("SetDarkMode: " . $darkmode, array("app" => $this->appName));
