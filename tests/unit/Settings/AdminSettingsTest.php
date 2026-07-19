@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace OCA\Drawio\Tests\Unit\Settings;
 
-use OCA\Drawio\Controller\SettingsController;
-use OCA\Drawio\Settings\Admin;
+use OCA\Drawio\Controller\AdminSettingsController;
+use OCA\Drawio\Settings\AdminSettings;
 use OCP\AppFramework\Http\TemplateResponse;
 use PHPUnit\Framework\TestCase;
 
-final class AdminTest extends TestCase {
+final class AdminSettingsTest extends TestCase {
 
-    private function createAdmin(?SettingsController $controller = null): Admin {
-        return new Admin($controller ?? $this->createMock(SettingsController::class));
+    private function createAdmin(?AdminSettingsController $controller = null): AdminSettings {
+        return new AdminSettings($controller ?? $this->createMock(AdminSettingsController::class));
     }
 
     public function testSectionAndPriority(): void {
@@ -32,7 +32,7 @@ final class AdminTest extends TestCase {
 
     public function testGetFormDelegatesToSettingsController(): void {
         $form = new TemplateResponse('drawio', 'settings', [], TemplateResponse::RENDER_AS_BLANK);
-        $controller = $this->createMock(SettingsController::class);
+        $controller = $this->createMock(AdminSettingsController::class);
         $controller->expects($this->once())->method('index')->willReturn($form);
 
         $this->assertSame($form, $this->createAdmin($controller)->getForm());

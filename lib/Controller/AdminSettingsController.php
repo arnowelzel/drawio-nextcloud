@@ -1,29 +1,18 @@
 <?php
 
-/**
- *
- * @author Pawel Rojek <pawel at pawelrojek.com>
- * @author Ian Reinhart Geiser <igeiser at devonit.com>
- * @author Arno Welzel <privat at arnowelzel.de>
- *
- * This file is licensed under the Affero General Public License version 3 or later.
- *
- **/
-
 namespace OCA\Drawio\Controller;
 
 use OCA\Drawio\AppConfig;
 use OCA\Drawio\AppInfo\Application;
-use OCA\Drawio\Settings\Admin;
+use OCA\Drawio\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
 use OCP\Util;
 
-class SettingsController extends Controller
+class AdminSettingsController extends Controller
 {
-
     private $config;
 
     /**
@@ -38,7 +27,6 @@ class SettingsController extends Controller
 
         $this->config = $config;
     }
-
 
     /**
      * Config page
@@ -59,16 +47,16 @@ class SettingsController extends Controller
             "drawioWhiteboards" => $this->config->GetWhiteboards(),
         ];
 
-        Util::addScript(Application::APP_ID, "settings");
+        Util::addScript(Application::APP_ID, "adminSettings");
         Util::addStyle(Application::APP_ID, "settings");
 
-        return new TemplateResponse($this->appName, "settings", $data, TemplateResponse::RENDER_AS_BLANK);
+        return new TemplateResponse($this->appName, "adminSettings", $data, TemplateResponse::RENDER_AS_BLANK);
     }
 
 	/**
 	 * Save settings
 	 */
-    #[AuthorizedAdminSetting(settings: Admin::class)]
+    #[AuthorizedAdminSetting(settings: AdminSettings::class)]
     public function settings()
     {
         $drawio = trim($this->request->getParam('drawioUrl', ''));

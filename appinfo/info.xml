@@ -46,7 +46,9 @@
         </uninstall>
     </repair-steps>
     <settings>
-        <admin>OCA\Drawio\Settings\Admin</admin>
-        <admin-section>OCA\Drawio\Settings\Section</admin-section>
+        <admin>OCA\Drawio\Settings\AdminSettings</admin>
+        <admin-section>OCA\Drawio\Settings\AdminSection</admin-section>
+        <personal>OCA\Drawio\Settings\PersonalSettings</personal>
+        <personal-section>OCA\Drawio\Settings\PersonalSection</personal-section>
     </settings>
 </info>
