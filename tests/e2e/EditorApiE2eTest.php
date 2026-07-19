@@ -37,7 +37,16 @@ final class EditorApiE2eTest extends E2ETestCase {
         $this->assertNotEmpty($data['instanceId']);
     }
 
-    public function testLoadSaveRoundTripWithEtagRotation(): void {
+    /**
+     * The contract the editor depends on: a save persists the content and hands
+     * back the ETag the file now has, so the next save is not rejected.
+     *
+     * Do not assert that the ETag differs from the previous one. Nextcloud
+     * derives it from the file metadata, which on some filesystems is identical
+     * for two writes within the same second, so that assertion fails depending
+     * on how fast the machine is rather than on this app being correct.
+     */
+    public function testLoadSaveRoundTripReturnsTheCurrentEtag(): void {
         $load = self::decodeJson((string)self::apiClient()->get('/index.php/apps/drawio/ajax/load', [
             'query' => ['fileId' => self::$fileId, 'shareToken' => ''],
         ])->getBody());
@@ -53,7 +62,7 @@ final class EditorApiE2eTest extends E2ETestCase {
         ]);
         $this->assertSame(200, $save->getStatusCode());
         $saveData = self::decodeJson((string)$save->getBody());
-        $this->assertNotSame($load['etag'], $saveData['etag']);
+        $this->assertNotEmpty($saveData['etag']);
 
         $reload = self::decodeJson((string)self::apiClient()->get('/index.php/apps/drawio/ajax/load', [
             'query' => ['fileId' => self::$fileId, 'shareToken' => ''],
