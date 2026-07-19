@@ -1,6 +1,6 @@
 <?php
     style("drawio", "settings");
-    script("drawio", "settings");
+    \OCP\Util::addScript("drawio", "adminSettings");
 ?>
 <div id="drawio" class="section section-drawio">
     <h2>Diagramming</h2>
@@ -17,7 +17,7 @@
     </div>
 
     <div class="drawio-setting">
-        <label for="theme"><?php p($l->t("Theme:")) ?></label>
+        <label for="theme"><?php p($l->t("Theme")) ?></label>
         <select id="theme">
             <option value="kennedy"<?php if ($_["drawioTheme"] === "kennedy") echo ' selected'; ?>><?php p($l->t("Classic")) ?></option>
             <option value="simple"<?php if ($_["drawioTheme"] === "simple") echo ' selected'; ?>><?php p($l->t("Modern")) ?></option>

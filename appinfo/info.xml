@@ -34,8 +34,10 @@
         <nextcloud min-version="33" max-version="34"/>
     </dependencies>
     <settings>
-        <admin>OCA\Drawio\Settings\Admin</admin>
+        <admin>OCA\Drawio\Settings\AdminSettings</admin>
         <admin-section>OCA\Drawio\Settings\Section</admin-section>
+        <personal>OCA\Drawio\Settings\PersonalSettings</personal>
+        <personal-section>OCA\Drawio\Settings\Section</personal-section>
     </settings>
     <repair-steps>
         <install>

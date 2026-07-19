@@ -12,15 +12,13 @@
 namespace OCA\Drawio\Settings;
 
 use OCP\Settings\IDelegatedSettings;
+use OCA\Drawio\Controller\AdminSettingsController;
 
-use OCA\Drawio\Controller\SettingsController;
+class AdminSettings implements IDelegatedSettings {
 
+    private AdminSettingsController $settingsController;
 
-class Admin implements IDelegatedSettings {
-
-    private SettingsController $settingsController;
-
-    public function __construct(SettingsController $settingsController)
+    public function __construct(AdminSettingsController $settingsController)
     {
         $this->settingsController = $settingsController;
     }
@@ -42,7 +40,7 @@ class Admin implements IDelegatedSettings {
 
     public function getSection()
     {
-        return "drawio";
+        return 'drawio';
     }
 
     public function getPriority()

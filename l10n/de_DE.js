@@ -57,6 +57,7 @@ OC.L10N.register(
     "Enable diagram previews?" : "Diagrammvorschau aktivieren?",
     "Note: Disable previews to save storage space used to store diagram preview images" : "Hinweis: Deaktivieren Sie Vorschauen, um Speicherplatz zu sparen, der zum Speichern von Diagrammvorschaubildern verwendet wird",
     "draw.io Configuration" : "draw.io Konfiguration:",
-    "Save" : "Speichern"
+    "Save" : "Speichern",
+    "When you upgraded from a version older than 4.3.0 you may have to fix the Nextcloud MIME type settings. Please see the instructions at GitHub:" : "Wenn Sie von einer Version älter als 4.3.0 aktualisiert haben, müssen Sie möglicherweise die MIME-Type-Einstellungen von Nextcloud korrigieren. Bitte beachten Sie die Anweisungen auf GitHub:"
 },
 "nplurals=2; plural=(n != 1);");

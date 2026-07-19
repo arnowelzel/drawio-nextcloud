@@ -22,7 +22,7 @@ use Psr\Log\LoggerInterface;
 
 use OCA\Drawio\AppConfig;
 
-class SettingsController extends Controller
+class AdminSettingsController extends Controller
 {
 
     private $trans;
@@ -78,7 +78,7 @@ class SettingsController extends Controller
             "drawioConfig" => $this->config->GetDrawioConfig(),
             "drawioWhiteboards" => $this->config->GetWhiteboards(),
         ];
-        return new TemplateResponse($this->appName, "settings", $data, "blank");
+        return new TemplateResponse($this->appName, "settings-admin", $data, "blank");
     }
 
 	/**
