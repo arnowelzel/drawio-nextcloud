@@ -15,13 +15,13 @@ final class SectionTest extends TestCase {
         $l10n = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnCallback(static fn (string $text, $params = []) => $text);
         $urlGenerator = $this->createMock(IURLGenerator::class);
-        $urlGenerator->method('imagePath')->with('drawio', 'app-dark.svg')->willReturn('/img/app-dark.svg');
+        $urlGenerator->method('imagePath')->with('drawio', 'app.svg')->willReturn('/img/app.svg');
 
         $section = new Section($urlGenerator, $l10n);
 
         $this->assertSame('drawio', $section->getID());
         $this->assertSame('Diagramming', $section->getName());
         $this->assertSame(75, $section->getPriority());
-        $this->assertSame('/img/app-dark.svg', $section->getIcon());
+        $this->assertSame('/img/app.svg', $section->getIcon());
     }
 }
