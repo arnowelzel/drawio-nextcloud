@@ -1,20 +1,17 @@
 <?php
 
 /**
- * NOTE: This class and its subclasses use internal Nextcloud APIs:
- * - OC\Core\Command\Maintenance\Mimetype\UpdateJS
- * - \OC::$SERVERROOT and \OC::$configDir
- * There is no public OCP API for registering custom MIME types.
- * This is a known Nextcloud limitation shared by other apps (Keeweb, Mind Map).
- * These usages should be reviewed if Nextcloud provides a public MIME type registration API.
+ * NOTE: This class and its subclasses use \OC::$configDir, for which there is
+ * no public OCP API. Registering custom MIME types via config/mimetypemapping.json
+ * is the approach recommended by the Nextcloud documentation and shared by other
+ * apps (Keeweb, Mind Map). These usages should be reviewed if Nextcloud provides
+ * a public MIME type registration API (https://github.com/nextcloud/server/issues/10131).
  **/
 
 namespace OCA\Drawio\Migration;
 
 use OCP\Files\IMimeTypeLoader;
-use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
-use OC\Core\Command\Maintenance\Mimetype\UpdateJS;
 
 abstract class MimeTypeMigration implements IRepairStep
 {
@@ -22,11 +19,9 @@ abstract class MimeTypeMigration implements IRepairStep
     const CUSTOM_MIMETYPEALIASES = 'mimetypealiases.json';
 
     protected $mimeTypeLoader;
-    protected $updateJS;
 
-    public function __construct(IMimeTypeLoader $mimeTypeLoader, UpdateJS $updateJS)
+    public function __construct(IMimeTypeLoader $mimeTypeLoader)
     {
         $this->mimeTypeLoader = $mimeTypeLoader;
-        $this->updateJS = $updateJS;
     }
 }

@@ -7,7 +7,7 @@ Nextcloud app that integrates the draw.io (diagrams.net) diagram editor. Users c
 - **App ID:** `drawio`
 - **Namespace:** `OCA\Drawio`
 - **License:** AGPL
-- **Nextcloud compatibility:** 33 only (min-version and max-version in `appinfo/info.xml`)
+- **Nextcloud compatibility:** 33–34 (min-version and max-version in `appinfo/info.xml`), PHP 8.2–8.5
 - **Version:** defined in both `appinfo/info.xml` and `package.json` (keep in sync)
 
 ## Repository Structure
@@ -15,27 +15,29 @@ Nextcloud app that integrates the draw.io (diagrams.net) diagram editor. Users c
 ```
 appinfo/           App manifest (info.xml) and route definitions (routes.php)
 lib/               PHP backend
-  AppConfig.php    Configuration manager (get/set for all admin settings)
-  AppInfo/         Application bootstrap, DI registration, MIME types
+  AppConfig.php    Configuration manager (get/set for all admin settings, backed by OCP IAppConfig)
+  AppInfo/         Application bootstrap, DI registration, runtime MIME type registration
   Controller/      EditorController (file CRUD, revisions) & SettingsController
-  Listeners/       Event handlers (file delete cleanup, reference widget loader, template creator)
+  Listeners/       Event handlers (file delete cleanup, reference widget loader, template creator, files scripts)
   Reference/       Reference Provider for inline diagram previews in Text/Collectives/Talk
   Migration/       MIME type registration/unregistration repair steps
   Preview/         Thumbnail generation from cached PNG previews
+  Service/         PublicShareAuth (public share password session check)
   Settings/        Admin settings panel registration
 src/               JavaScript source (webpack entry points)
   editor.js        Editor page – iframe communication, save/load, autosave, previews
-  main.js          File list integration – file actions, new file menu entries
+  main.js          File list integration – file actions, public share auto-open
   settings.js      Admin settings form
   reference.js     Reference widget registration for inline diagram previews
   components/      Vue components (DrawioReferenceWidget.vue)
 js/                Compiled webpack output (do not edit directly)
 templates/         PHP templates for editor and settings pages
-css/               Stylesheets (main, editor, settings)
+css/               Stylesheets (editor, settings)
 img/               SVG icons (app, app-dark, drawio file type, whiteboard)
 l10n/              Translations (~100 languages, managed in-repo)
 scripts/           Build/maintenance scripts (extract-strings.js, dev-setup.sh, dev-rebuild.sh)
-.github/workflows/ CI: release pipeline (release.yml), stale bot (stale.yml)
+tests/             PHPUnit unit tests (tests/unit) and psalm stubs (tests/stubs)
+.github/workflows/ CI: lint/psalm/phpunit/build (ci.yml), release pipeline (release.yml), stale bot (stale.yml)
 ```
 
 ## Build & Development
@@ -43,6 +45,7 @@ scripts/           Build/maintenance scripts (extract-strings.js, dev-setup.sh, 
 ### Prerequisites
 - Node.js 20+
 - npm
+- PHP 8.2+ and composer (for backend tooling; can be run via Docker)
 
 ### Commands
 ```bash
@@ -51,7 +54,26 @@ npm run build           # Production build (webpack, output to js/)
 npm run dev             # Development build
 npm run watch           # Development build with file watching
 npm run extract-strings # Extract translatable strings to l10n/source-strings.json
+
+composer update         # Install PHP dev tooling (nextcloud/ocp, psalm, phpunit, guzzle)
+composer run lint       # php -l over lib/, appinfo/, templates/, tests/
+composer run psalm      # Static analysis against the nextcloud/ocp API
+composer run test:unit  # PHPUnit unit tests (tests/unit)
 ```
+To check against Nextcloud 34 instead of 33: `composer require --dev nextcloud/ocp:dev-stable34` then `composer run psalm` (CI runs both).
+
+info.xml must validate against the app store schema (CI enforces this; element order matters):
+```bash
+curl -sSLo /tmp/info.xsd https://apps.nextcloud.com/schema/apps/info.xsd
+xmllint --noout --schema /tmp/info.xsd appinfo/info.xml
+```
+
+### Test suite layout
+- `tests/unit/` — PHPUnit tests, one test class per production class. Covers EditorController (load/save/create/index/versions incl. locking, ETag conflicts and share permissions), SettingsController, AppConfig, PublicShareAuth, DrawioReferenceProvider, DrawioPreview, all listeners, both MIME repair steps, the Settings classes and appinfo/info.xml invariants (version sync with package.json, repair-step element names).
+- `tests/support/` — runtime shims that make OCP static helpers work without a server: `legacy-oc.php` (minimal `OC`, `OC_Util`, `OC\AppScriptDependency`, `OC\Hooks\Emitter`), `FakeServerContainer` (installed as `\OC::$server`), `ResetsGlobalState` trait (resets `\OCP\Util` script registries between tests).
+- `tests/doubles` equivalents live in `tests/support/oca-doubles.php` — real (not psalm-only) declarations of `OCA\Files\Event\LoadAdditionalScriptsEvent`, `OCA\Files_Sharing\Event\BeforeTemplateRenderedEvent` and the `OCA\Files_Versions` interfaces, mirroring server stable33.
+- `tests/stubs/*.phpstub` — psalm-only stubs; keep them in sync with oca-doubles.php when server APIs change.
+- No PHP runtime on this machine? Run everything through Docker: `docker run --rm -v "${PWD}:/app" -w /app composer:2 sh -c "composer update && composer run test:unit"`.
 
 ### Local Development (Docker)
 See `DEV.md` for full details. Quick start:
@@ -98,8 +120,11 @@ When a draw.io editor URL is pasted into Nextcloud Text, Collectives, Talk, Note
 
 ### Key Patterns
 - **Concurrency:** ETags for optimistic conflict detection; ILockingProvider for file locking
-- **Sharing:** Supports both authenticated users and public share tokens (separate code paths)
-- **Configuration:** All admin settings stored via Nextcloud's config API (`AppConfig.php`)
+- **Sharing:** Supports both authenticated users and public share tokens (separate code paths). Password-protected shares are checked by `Service\PublicShareAuth` against the `public_link_authenticated_frontend` session map (`PublicShareController::DAV_AUTHENTICATED_FRONTEND`, format introduced in NC 33)
+- **Configuration:** All admin settings stored via `OCP\AppFramework\Services\IAppConfig` (`AppConfig.php`); `OCP\IConfig` app-value methods are deprecated and must not be used
+- **Security attributes:** Controller access control uses PHP attributes (`#[NoAdminRequired]`, `#[PublicPage]`, `#[NoCSRFRequired]`, `#[AuthorizedAdminSetting]`) — the old annotation syntax is deprecated
+- **Script loading:** `main.js` is loaded only in the Files app (`OCA\Files\Event\LoadAdditionalScriptsEvent`) and on public share pages (`OCA\Files_Sharing\Event\BeforeTemplateRenderedEvent`) via `FilesScriptsListener`; editor/settings assets are added with `Util::addScript`/`Util::addStyle` in the controllers (the template `script()`/`style()` helpers are deprecated)
+- **CSP:** The editor page allows the draw.io origin for `script-src`, `frame-src` and `worker-src` (+`blob:`). `child-src` was removed from the CSP API in NC 34 — do not reintroduce it
 - **MIME types:** `application/x-drawio` (.drawio) and `application/x-drawio-wb` (.dwb), registered in repair steps
 - **Translations:** Use `t('drawio', 'key')` in JS (`@nextcloud/l10n`), `$l->t('key')` in PHP templates, and `$this->trans->t('key')` in PHP controllers
 - **Frontend globals:** `OCA.DrawIO` namespace used in `main.js`; `editor.js` uses an IIFE with `OCA` parameter
@@ -108,7 +133,7 @@ When a draw.io editor URL is pasted into Nextcloud Text, Collectives, Talk, Note
 
 ## MIME Type Registration (Critical for Create/Edit Flow)
 
-The create/edit flow — creating a `.drawio`/`.dwb` file from the "+" menu, then clicking it to open in the draw.io editor — depends on all of the following MIME type registration steps working together. **Removing or skipping any of these breaks the basic flow** (files download instead of opening in the editor):
+The create/edit flow — creating a `.drawio`/`.dwb` file from the "+" menu, then clicking it to open in the draw.io editor — depends on the following MIME type registration steps working together. **Removing or skipping any of these breaks the basic flow** (files download instead of opening in the editor):
 
 1. **Config files** (`RegisterMimeType::registerForNewFiles`)
    - Writes to `config/mimetypemapping.json` (extension → MIME type)
@@ -117,21 +142,15 @@ The create/edit flow — creating a `.drawio`/`.dwb` file from the "+" menu, the
 2. **Filecache update** (`RegisterMimeType::registerForExistingFiles`)
    - Updates DB filecache so existing `.drawio`/`.dwb` files have the correct MIME type
 
-3. **Icon copy** (`RegisterMimeType::copyIcons`)
-   - Copies `drawio.svg` and `dwb.svg` to `core/img/filetypes/`
+3. **Runtime registration** (`Application::boot`)
+   - `$detector->registerType("drawio", "application/x-drawio")` / `registerType("dwb", ...)`
+   - Backup for setups where the config directory is not writable; relies on the private
+     `OC\Files\Type\Detection` class (guarded with `method_exists`) because there is no OCP
+     API for this (https://github.com/nextcloud/server/issues/10131)
+   - `getAllMappings()` must be called before `registerType()` — it forces the detector to load
+     the default mappings, which would otherwise be skipped afterwards
 
-4. **UpdateJS** (`$this->updateJS->run(...)`)
-   - Regenerates `core/js/mimetypelist.js` with drawio MIME type entries
-
-5. **Runtime registration** (`Application::boot`)
-   - `$detector->registerType("drawio", "application/x-drawio")`
-   - `$detector->registerType("dwb", "application/x-drawio-wb")`
-
-6. **Self-healing** (`Application::ensureMimeTypeAssets`)
-   - Re-runs all of the above when NC version changes or icons are missing from core
-   - This fixed https://github.com/jgraph/drawio-nextcloud/issues/119
-
-Steps 3 and 4 modify Nextcloud core files, which triggers integrity check warnings (https://github.com/jgraph/drawio-nextcloud/issues/70). This is a known Nextcloud limitation — there is no public API for apps to register MIME type icons without modifying core (see https://github.com/nextcloud/server/issues/10131). **Do not remove steps 3 or 4 to fix the integrity warnings — it breaks the create/edit flow.**
+Since 4.3.0 the app intentionally does **not** copy file type icons to `core/img/filetypes/` and does **not** regenerate `core/js/mimetypelist.js` (the old steps 3/4). Modifying core files triggered integrity check warnings (https://github.com/jgraph/drawio-nextcloud/issues/70), so this was dropped; `.drawio`/`.dwb` files show a generic file icon and admins can follow the FAQ (linked from the admin settings) to add icons manually. Do not reintroduce core file modifications.
 
 ### Testing the Create/Edit Flow
 After any change to MIME type registration, always verify:
@@ -146,8 +165,9 @@ After any change to MIME type registration, always verify:
 - JavaScript uses ES6+ imports with `@nextcloud/*` packages
 - Vue 2 Single File Components (`.vue`) used for reference widget (`src/components/`)
 - `@nextcloud/vue` v8 provides `registerWidget` for reference widgets
-- No linter or formatter is configured
-- No test framework is set up
+- No JS linter or PHP formatter is configured
+- PHP unit tests live in `tests/unit` (PHPUnit via `composer run test:unit`); psalm (`composer run psalm`) checks the code against the `nextcloud/ocp` API of both supported majors. Bug fixes should come with a regression test that fails before and passes after the fix.
+- Repair steps in `appinfo/info.xml` must use the element names the server executes: `install`, `pre-migration`, `post-migration`, `live-migration`, `uninstall` — anything else is parsed but silently never run (this bit us with `post-migrate`); `tests/unit/AppInfoXmlTest.php` and the CI schema check guard this.
 
 ## Translations
 Managed in-repo. The `l10n/` directory contains `.js` and `.json` files for ~100 languages. These are the runtime format Nextcloud loads directly.

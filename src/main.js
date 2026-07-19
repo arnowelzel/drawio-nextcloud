@@ -86,7 +86,7 @@ $(function ()
     // On public share pages, auto-open if the shared file is a diagram
     setTimeout(async () =>
     {
-        if (window.location.pathname.startsWith('/s/'))
+        if (isPublicShare())
         {
             var shareToken = getSharingToken();
             if (!shareToken) return;

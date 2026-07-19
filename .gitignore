@@ -1,2 +1,6 @@
 node_modules/
 docker-compose.override.yml
+vendor/
+composer.lock
+.phpunit.cache/
+.phpunit.result.cache

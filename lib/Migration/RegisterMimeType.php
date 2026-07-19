@@ -2,8 +2,6 @@
 
 namespace OCA\Drawio\Migration;
 
-require \OC::$SERVERROOT . "/3rdparty/autoload.php";
-
 use OCP\Migration\IOutput;
 
 class RegisterMimeType extends MimeTypeMigration

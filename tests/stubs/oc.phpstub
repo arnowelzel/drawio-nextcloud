@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * Psalm stubs for private Nextcloud server classes used by this app.
+ * There is no OCP API for these yet, see
+ * https://github.com/nextcloud/server/issues/10131
+ */
+
+namespace {
+    class OC {
+        /** @var string */
+        public static $SERVERROOT = '';
+        /** @var string */
+        public static $configDir = '';
+    }
+}
+
+namespace OC\Hooks {
+    interface Emitter {
+    }
+}
+
+namespace OC {
+    class Image implements \OCP\IImage {
+        public function valid(): bool {}
+
+        public function loadFromData(string $str): \GdImage|false {}
+
+        public function scaleDownToFit(int $maxWidth, int $maxHeight): bool {}
+    }
+}

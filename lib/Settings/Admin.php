@@ -11,6 +11,7 @@
 
 namespace OCA\Drawio\Settings;
 
+use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Settings\IDelegatedSettings;
 
 use OCA\Drawio\Controller\SettingsController;
@@ -35,7 +36,7 @@ class Admin implements IDelegatedSettings {
         ];
     }
 
-    public function getForm()
+    public function getForm(): TemplateResponse
     {
         return $this->settingsController->index();
     }

@@ -12,51 +12,31 @@
 
 namespace OCA\Drawio\Controller;
 
-use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http\TemplateResponse;
-use OCP\Files\IMimeTypeLoader;
-use OCP\Files\IMimeTypeDetector;
-use OCP\IL10N;
-use OCP\IRequest;
-use Psr\Log\LoggerInterface;
-
 use OCA\Drawio\AppConfig;
+use OCA\Drawio\AppInfo\Application;
+use OCA\Drawio\Settings\Admin;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
+use OCP\AppFramework\Http\TemplateResponse;
+use OCP\IRequest;
+use OCP\Util;
 
 class SettingsController extends Controller
 {
 
-    private $trans;
-    private $logger;
     private $config;
-    private $mimeTypeLoader;
-    private $mimeTypeDetector;
-
 
     /**
-     * @param string $AppName - application name
      * @param IRequest $request - request object
-     * @param IL10N $trans - l10n service
-     * @param LoggerInterface $logger - logger
      * @param AppConfig $config - application configuration
-     * @param IMimeTypeLoader $mimeTypeLoader - MIME type loader
-     * @param IMimeTypeDetector $mimeTypeDetector - MIME type detector
      */
-    public function __construct($AppName,
-                                IRequest $request,
-                                IL10N $trans,
-                                LoggerInterface $logger,
-                                AppConfig $config,
-                                IMimeTypeLoader $mimeTypeLoader,
-                                IMimeTypeDetector $mimeTypeDetector
+    public function __construct(IRequest $request,
+                                AppConfig $config
                                 )
     {
-        parent::__construct($AppName, $request);
+        parent::__construct(Application::APP_ID, $request);
 
-        $this->trans = $trans;
-        $this->logger = $logger;
         $this->config = $config;
-        $this->mimeTypeLoader = $mimeTypeLoader;
-        $this->mimeTypeDetector = $mimeTypeDetector;
     }
 
 
@@ -78,14 +58,17 @@ class SettingsController extends Controller
             "drawioConfig" => $this->config->GetDrawioConfig(),
             "drawioWhiteboards" => $this->config->GetWhiteboards(),
         ];
-        return new TemplateResponse($this->appName, "settings", $data, "blank");
+
+        Util::addScript(Application::APP_ID, "settings");
+        Util::addStyle(Application::APP_ID, "settings");
+
+        return new TemplateResponse($this->appName, "settings", $data, TemplateResponse::RENDER_AS_BLANK);
     }
 
 	/**
 	 * Save settings
-	 *
-	 * @AuthorizedAdminSetting(settings=OCA\Drawio\Settings\Admin)
 	 */
+    #[AuthorizedAdminSetting(settings: Admin::class)]
     public function settings()
     {
         $drawio = trim($this->request->getParam('drawioUrl', ''));

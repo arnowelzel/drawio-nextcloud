@@ -31,21 +31,22 @@
     <repository type="git">https://github.com/arnowelzel/drawio-nextcloud.git</repository>
     <screenshot small-thumbnail="https://raw.githubusercontent.com/arnowelzel/drawio-nextcloud/refs/heads/main/screenshots/drawio_integration_sm.png">https://raw.githubusercontent.com/arnowelzel/drawio-nextcloud/refs/heads/main/screenshots/drawio_integration.png</screenshot>
     <dependencies>
+        <php min-version="8.2" max-version="8.5"/>
         <nextcloud min-version="33" max-version="34"/>
     </dependencies>
+    <repair-steps>
+        <post-migration>
+            <step>OCA\Drawio\Migration\RegisterMimeType</step>
+        </post-migration>
+        <install>
+            <step>OCA\Drawio\Migration\RegisterMimeType</step>
+        </install>
+        <uninstall>
+            <step>OCA\Drawio\Migration\UnregisterMimeType</step>
+        </uninstall>
+    </repair-steps>
     <settings>
         <admin>OCA\Drawio\Settings\Admin</admin>
         <admin-section>OCA\Drawio\Settings\Section</admin-section>
     </settings>
-    <repair-steps>
-        <install>
-            <step>OCA\Drawio\Migration\RegisterMimeType</step>
-        </install>
-        <post-migrate>
-            <step>OCA\Drawio\Migration\RegisterMimeType</step>
-        </post-migrate>
-        <uninstall>
-            <step>OCA\Drawio\Migration\UnregisterMimeType</step>
-        </uninstall>
-    </repair-steps>       
 </info>
