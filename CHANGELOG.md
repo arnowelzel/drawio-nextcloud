@@ -1,5 +1,10 @@
 # Change Log
 
+## 4.3.1
+
+- Refactored code to remove deprecations (thanks to solracfs)
+- Created new application icon
+
 ## 4.3.0
 
 - Refactored MIME type registration to avoid changint core files of Nextcloud

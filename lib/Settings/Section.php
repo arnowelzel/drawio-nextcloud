@@ -30,6 +30,6 @@ class Section implements IIconSection {
 	}
 
 	public function getIcon() {
-		return $this->url->imagePath('drawio', 'app-dark.svg');
+		return $this->url->imagePath('drawio', 'app.svg');
 	}
 }
