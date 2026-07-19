@@ -4,10 +4,11 @@
 
 - Refactored code to remove deprecations (thanks to solracfs)
 - Created new application icon
+- Implemented personal settings
 
 ## 4.3.0
 
-- Refactored MIME type registration to avoid changint core files of Nextcloud
+- Refactored MIME type registration to avoid changing core files of Nextcloud
 - Filetype icons will no longer be copied to Nextcloud core folders to avoid integrity check errors.
 
 ## 4.2.5

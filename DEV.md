@@ -5,6 +5,20 @@
 - Docker and Docker Compose
 - Node.js 20+
 - npm
+- composer
+
+## Commands
+
+- `npm ci` - Install dependencies (use ci, not install)
+- `npm run build` - Production build (webpack, output to js/)
+- `npm run dev` - Development build
+- `npm run watch` - Development build with file watching
+- `npm run extract-strings` - Extract translatable strings to l10n/source-strings.json
+- `composer update` - Install PHP dev tooling (nextcloud/ocp, psalm, phpunit, guzzle)
+- `composer run lint` - php -l over lib/, appinfo/, templates/, tests/
+- `composer run psalm` - Static analysis against the nextcloud/ocp API
+- `composer run test:unit` - PHPUnit unit tests (tests/unit)
+- `composer run test:e2e` - PHPUnit end-to-end tests (tests/e2e) against a running instance
 
 ## Quick Start
 
