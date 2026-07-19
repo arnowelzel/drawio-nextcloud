@@ -73,7 +73,7 @@ $(function () {
             params.append(key, settings[key]);
         }
 
-        var response = await axios.post(generateUrl('apps/'+ OCA.DrawIO.AppName + '/ajax/adminSettings'), params);
+        var response = await axios.post(generateUrl('apps/'+ OCA.DrawIO.AppName + '/ajax/settings'), params);
         saving.hideToast();
 
         if (response.status == 200)

@@ -11,34 +11,35 @@
 
 namespace OCA\Drawio\AppInfo;
 
-use OCA\Drawio\AppConfig;
-use OCA\Drawio\PersonalConfig;
-use OCA\Drawio\Preview\DrawioPreview;
-use OCA\Drawio\Listeners\FileDeleteListener;
-use OCA\Drawio\Listeners\DrawioReferenceListener;
-use OCA\Drawio\Listeners\RegisterTemplateCreatorListener;
-use OCA\Drawio\Reference\DrawioReferenceProvider;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\IConfig;
-use OCP\IUserSession;
 use OCP\Util;
 use OCP\Files\IMimeTypeDetector;
+use OCP\Files\IMimeTypeLoader;
+
 use OCP\AppFramework\Services\IInitialState;
+
+use OCA\Drawio\AppConfig;
+use OCA\Drawio\Preview\DrawioPreview;
+use OCA\Drawio\Listeners\FileDeleteListener;
+use OCA\Drawio\Listeners\DrawioReferenceListener;
+use OCA\Drawio\Listeners\RegisterTemplateCreatorListener;
+use OCA\Drawio\Reference\DrawioReferenceProvider;
+
 use OCP\Collaboration\Reference\RenderReferenceEvent;
 use OCP\Files\Events\Node\NodeDeletedEvent;
 use OCP\Files\Template\RegisterTemplateCreatorEvent;
 use Psr\Log\LoggerInterface;
 
-class Application extends App implements IBootstrap
-{
-    public const APP_ID = 'drawio';
+
+class Application extends App implements IBootstrap {
 
     public function __construct(array $urlParams = [])
     {
-        parent::__construct(self::APP_ID, $urlParams);
+        parent::__construct("drawio", $urlParams);
     }
 
     public function register(IRegistrationContext $context): void
@@ -56,17 +57,8 @@ class Application extends App implements IBootstrap
 
         $context->registerService(AppConfig::class, function ($c) {
             return new AppConfig(
-                self::APP_ID,
+                'drawio',
                 $c->get(IConfig::class),
-                $c->get(LoggerInterface::class)
-            );
-        });
-
-        $context->registerService(PersonalConfig::class, function ($c) {
-            return new PersonalConfig(
-                self::APP_ID,
-                $c->get(IConfig::class),
-                $c->get(IUserSession::class),
                 $c->get(LoggerInterface::class)
             );
         });
@@ -74,8 +66,8 @@ class Application extends App implements IBootstrap
 
     public function boot(IBootContext $context): void
     {
-        Util::addInitScript(self::APP_ID, 'main');
-        Util::addStyle(self::APP_ID, 'main');
+        Util::addInitScript("drawio", "main");
+        Util::addStyle("drawio", "main");
 
         $container = $context->getAppContainer();
 
@@ -84,9 +76,35 @@ class Application extends App implements IBootstrap
         $initialState->provideInitialState('whiteboards', $appConfig->GetWhiteboards());
         $detector = $container->get(IMimeTypeDetector::class);
         $detector->getAllMappings();
-        $detector->registerType('drawio', 'application/x-drawio');
-        $detector->registerType('dwb', 'application/x-drawio-wb');
+        $detector->registerType("drawio", "application/x-drawio");
+        $detector->registerType("dwb", "application/x-drawio-wb");
 
         // $this->ensureMimeTypeAssets($container, $appConfig, $detector);
+    }
+
+    /**
+     * Self-healing check: re-register MIME type assets if they were lost
+     * (e.g., after a Nextcloud core upgrade that replaces core/ files).
+     */
+    private function ensureMimeTypeAssets($container, AppConfig $appConfig, IMimeTypeDetector $detector): void
+    {
+        $currentNcVersion = $container->get(\OCP\ServerVersion::class)->getVersionString();
+        $storedNcVersion = $appConfig->GetNcVersion();
+
+        if ($storedNcVersion === $currentNcVersion) {
+            return;
+        }
+
+        try {
+            $logger = $container->get(LoggerInterface::class);
+            $logger->info('Diagramming: Re-registering MIME type assets (NC version: ' .
+                $storedNcVersion . ' -> ' . $currentNcVersion . ')', ['app' => 'drawio']);
+
+            $logger->info('Diagramming: MIME type assets re-registered successfully', ['app' => 'drawio']);
+        } catch (\Exception $e) {
+            $logger = $container->get(LoggerInterface::class);
+            $logger->warning('Diagramming: Failed to re-register MIME type assets: ' . $e->getMessage(),
+                ['app' => 'drawio', 'exception' => $e]);
+        }
     }
 }

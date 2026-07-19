@@ -15,6 +15,7 @@ use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 
 class AppConfig {
+
     private $predefDrawioUrl = "https://embed.diagrams.net";
     private $predefOfflineMode = "no";
     private $predefTheme = "kennedy"; //kennedy, min (=minimal), atlas, simple
@@ -220,4 +221,14 @@ class AppConfig {
     {
         return $this->appName;
     }
+
+     /**
+     * Additional data about formats
+     *
+     * @var array
+     */
+    public $formats = [
+            "drawio" => [ "mime" => "application/x-drawio", "type" => "text" ],
+            "dwb" => [ "mime" => "application/x-drawio-wb", "type" => "text" ]
+        ];
 }

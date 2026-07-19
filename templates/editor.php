@@ -1,6 +1,6 @@
 <?php
     style("drawio", "editor");
-    \OCP\Util::addScript("drawio", "editor");
+    script("drawio", "editor");
 
     $frame_params = "?embed=1&embedRT=1&configure=1";
     if ($_["drawioOfflineMode"] === "yes")

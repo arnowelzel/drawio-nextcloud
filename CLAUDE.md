@@ -1,0 +1,165 @@
+# CLAUDE.md - drawio-nextcloud
+
+## Project Overview
+
+Nextcloud app that integrates the draw.io (diagrams.net) diagram editor. Users can create and edit `.drawio` diagrams and `.dwb` whiteboards directly within Nextcloud. The draw.io editor runs in an iframe and communicates with the Nextcloud backend via postMessage.
+
+- **App ID:** `drawio`
+- **Namespace:** `OCA\Drawio`
+- **License:** AGPL
+- **Nextcloud compatibility:** 33 only (min-version and max-version in `appinfo/info.xml`)
+- **Version:** defined in both `appinfo/info.xml` and `package.json` (keep in sync)
+
+## Repository Structure
+
+```
+appinfo/           App manifest (info.xml) and route definitions (routes.php)
+lib/               PHP backend
+  AppConfig.php    Configuration manager (get/set for all admin settings)
+  AppInfo/         Application bootstrap, DI registration, MIME types
+  Controller/      EditorController (file CRUD, revisions) & SettingsController
+  Listeners/       Event handlers (file delete cleanup, reference widget loader, template creator)
+  Reference/       Reference Provider for inline diagram previews in Text/Collectives/Talk
+  Migration/       MIME type registration/unregistration repair steps
+  Preview/         Thumbnail generation from cached PNG previews
+  Settings/        Admin settings panel registration
+src/               JavaScript source (webpack entry points)
+  editor.js        Editor page – iframe communication, save/load, autosave, previews
+  main.js          File list integration – file actions, new file menu entries
+  settings.js      Admin settings form
+  reference.js     Reference widget registration for inline diagram previews
+  components/      Vue components (DrawioReferenceWidget.vue)
+js/                Compiled webpack output (do not edit directly)
+templates/         PHP templates for editor and settings pages
+css/               Stylesheets (main, editor, settings)
+img/               SVG icons (app, app-dark, drawio file type, whiteboard)
+l10n/              Translations (~100 languages, managed in-repo)
+scripts/           Build/maintenance scripts (extract-strings.js, dev-setup.sh, dev-rebuild.sh)
+.github/workflows/ CI: release pipeline (release.yml), stale bot (stale.yml)
+```
+
+## Build & Development
+
+### Prerequisites
+- Node.js 20+
+- npm
+
+### Commands
+```bash
+npm ci                  # Install dependencies (use ci, not install)
+npm run build           # Production build (webpack, output to js/)
+npm run dev             # Development build
+npm run watch           # Development build with file watching
+npm run extract-strings # Extract translatable strings to l10n/source-strings.json
+```
+
+### Local Development (Docker)
+See `DEV.md` for full details. Quick start:
+```bash
+npm ci
+./scripts/dev-setup.sh        # builds, starts NC 33 + MariaDB, enables the app
+```
+Then open http://localhost:8088 (admin / admin). PHP changes are live (volume-mounted); JS changes require `npm run build`.
+
+**Important:** Do not change the app version in `info.xml` during development — it will break the Nextcloud instance.
+
+## Architecture
+
+### Data Flow
+1. User clicks a `.drawio`/`.dwb` file → `main.js` registers file actions via `@nextcloud/files`
+2. Editor page loads → `editor.js` creates iframe pointing to draw.io (embed.diagrams.net or self-hosted)
+3. draw.io ↔ Nextcloud communication via `postMessage` / "remote invoke" protocol
+4. Save/load operations go through `EditorController` PHP endpoints
+5. PNG previews are generated client-side and saved via `savePreview` endpoint
+
+### Inline Previews (Reference Provider)
+When a draw.io editor URL is pasted into Nextcloud Text, Collectives, Talk, Notes, or Deck:
+1. `DrawioReferenceProvider` matches the URL and resolves file metadata + preview image
+2. `DrawioReferenceListener` loads the `drawio-reference` JS bundle on demand
+3. `reference.js` registers a Vue widget (`DrawioReferenceWidget.vue`) for the `drawio_diagram` rich object type
+4. The widget renders an inline card with the diagram thumbnail and an "Open in Draw.io" link
+5. Smart Picker (`/` menu) lists "Draw.io Diagrams" via `ISearchableReferenceProvider`
+
+### Template Creator
+`RegisterTemplateCreatorListener` registers `.drawio` and `.dwb` as file types in the Nextcloud "+" new file menu via `RegisterTemplateCreatorEvent`. This also enables creating diagrams as Text document attachments (stored in `.attachments.{docId}/` folders). The editor detects attachment paths on close and redirects to the parent document.
+
+### API Routes (all under `/apps/drawio/`)
+| Method | URL                    | Controller Method        |
+|--------|------------------------|--------------------------|
+| GET    | `/edit`                | `EditorController@index` |
+| GET    | `/ajax/load`           | `EditorController@load`  |
+| GET    | `/ajax/getFileInfo`    | `EditorController@getFileInfo` |
+| GET    | `/ajax/getFileRevisions` | `EditorController@getFileRevisions` |
+| GET    | `/ajax/loadFileVersion` | `EditorController@loadFileVersion` |
+| POST   | `/ajax/new`            | `EditorController@create` |
+| PUT    | `/ajax/save`           | `EditorController@save`  |
+| POST   | `/ajax/savePreview`    | `EditorController@savePreview` |
+| POST   | `/ajax/settings`       | `SettingsController@settings` |
+
+### Key Patterns
+- **Concurrency:** ETags for optimistic conflict detection; ILockingProvider for file locking
+- **Sharing:** Supports both authenticated users and public share tokens (separate code paths)
+- **Configuration:** All admin settings stored via Nextcloud's config API (`AppConfig.php`)
+- **MIME types:** `application/x-drawio` (.drawio) and `application/x-drawio-wb` (.dwb), registered in repair steps
+- **Translations:** Use `t('drawio', 'key')` in JS (`@nextcloud/l10n`), `$l->t('key')` in PHP templates, and `$this->trans->t('key')` in PHP controllers
+- **Frontend globals:** `OCA.DrawIO` namespace used in `main.js`; `editor.js` uses an IIFE with `OCA` parameter
+- **Reference Provider:** `DrawioReferenceProvider` extends `ADiscoverableReferenceProvider` and implements `ISearchableReferenceProvider`; rich object type is `drawio_diagram`
+- **Template Creator:** `.drawio`/`.dwb` registered via `RegisterTemplateCreatorEvent` + `TemplateFileCreator`
+
+## MIME Type Registration (Critical for Create/Edit Flow)
+
+The create/edit flow — creating a `.drawio`/`.dwb` file from the "+" menu, then clicking it to open in the draw.io editor — depends on all of the following MIME type registration steps working together. **Removing or skipping any of these breaks the basic flow** (files download instead of opening in the editor):
+
+1. **Config files** (`RegisterMimeType::registerForNewFiles`)
+   - Writes to `config/mimetypemapping.json` (extension → MIME type)
+   - Writes to `config/mimetypealiases.json` (MIME type → icon alias)
+
+2. **Filecache update** (`RegisterMimeType::registerForExistingFiles`)
+   - Updates DB filecache so existing `.drawio`/`.dwb` files have the correct MIME type
+
+3. **Icon copy** (`RegisterMimeType::copyIcons`)
+   - Copies `drawio.svg` and `dwb.svg` to `core/img/filetypes/`
+
+4. **UpdateJS** (`$this->updateJS->run(...)`)
+   - Regenerates `core/js/mimetypelist.js` with drawio MIME type entries
+
+5. **Runtime registration** (`Application::boot`)
+   - `$detector->registerType("drawio", "application/x-drawio")`
+   - `$detector->registerType("dwb", "application/x-drawio-wb")`
+
+6. **Self-healing** (`Application::ensureMimeTypeAssets`)
+   - Re-runs all of the above when NC version changes or icons are missing from core
+   - This fixed https://github.com/jgraph/drawio-nextcloud/issues/119
+
+Steps 3 and 4 modify Nextcloud core files, which triggers integrity check warnings (https://github.com/jgraph/drawio-nextcloud/issues/70). This is a known Nextcloud limitation — there is no public API for apps to register MIME type icons without modifying core (see https://github.com/nextcloud/server/issues/10131). **Do not remove steps 3 or 4 to fix the integrity warnings — it breaks the create/edit flow.**
+
+### Testing the Create/Edit Flow
+After any change to MIME type registration, always verify:
+1. Run `./scripts/dev-setup.sh` for a fresh NC instance
+2. Create a new `.drawio` file from the "+" menu → file should appear in the file list
+3. Click the file → should open in the draw.io editor (NOT download)
+4. Edit, save, and close → changes should persist
+5. Re-open the file → saved content should be there
+
+## File Conventions
+- PHP follows PSR-2/PSR-12 style
+- JavaScript uses ES6+ imports with `@nextcloud/*` packages
+- Vue 2 Single File Components (`.vue`) used for reference widget (`src/components/`)
+- `@nextcloud/vue` v8 provides `registerWidget` for reference widgets
+- No linter or formatter is configured
+- No test framework is set up
+
+## Translations
+Managed in-repo. The `l10n/` directory contains `.js` and `.json` files for ~100 languages. These are the runtime format Nextcloud loads directly.
+
+- Run `npm run extract-strings` to regenerate `l10n/source-strings.json` — the canonical list of all English source strings
+- The script scans `src/*.js`, `templates/*.php`, and `lib/**/*.php` for translation function calls
+- To add/update a translation: edit the corresponding `l10n/{lang}.js` and `l10n/{lang}.json` files directly
+- The `.js` format uses `OC.L10N.register("drawio", {...}, "pluralForm")` and the `.json` format uses `{"translations": {...}, "pluralForm": "..."}`
+
+## Release Process
+Handled by `.github/workflows/release.yml` on version tags (`v*`):
+1. Checkout → npm ci → npm run build
+2. Create zip/tar.gz archives (excluding dev files)
+3. Upload to GitHub Releases
+4. Sign with RSA key and publish to Nextcloud App Store

@@ -7,8 +7,7 @@ module.exports = {
     entry: {
         'editor': './src/editor.js',
         'main': './src/main.js',
-        'adminSettings': './src/adminSettings.js',
-        'personalSettings': './src/personalSettings.js',
+        'settings': './src/settings.js',
         'drawio-reference': './src/reference.js'
     },
     output: {

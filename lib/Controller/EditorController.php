@@ -11,17 +11,13 @@
 
 namespace OCA\Drawio\Controller;
 
-use OCA\Files\Helper;
-use OCP\Files\IAppData;
-use OCA\Files_Versions\Versions\IVersionManager;
-use OCA\Files_Versions\Versions\IVersion;
-use OCA\Drawio\AppConfig;
-use OCA\Drawio\PersonalConfig;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\Template\PublicTemplateResponse;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\AppFramework\Controller;
+use OCP\AutoloadNotAllowedException;
 use OCP\Constants;
 use OCP\Files\FileInfo;
 use OCP\Files\IRootFolder;
@@ -32,9 +28,21 @@ use OCP\IURLGenerator;
 use OCP\IUserSession;
 use OCP\Share\Exceptions\ShareNotFound;
 use OCP\Share\IManager;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
+
 use OCP\IConfig;
 use OCP\L10N\IFactory as IL10NFactory;
 use OCP\Lock\ILockingProvider;
+
+use OCA\Files\Helper;
+use OCP\Files\IAppData;
+use OCA\Files_Versions\Storage;
+use OCA\Files_Versions\Versions\IVersionManager;
+use OCA\Files_Versions\Versions\IVersion;
+use OCA\Drawio\AppConfig;
+
+
 use OCP\HintException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
@@ -46,8 +54,6 @@ use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
 use OCP\Lock\LockedException;
 use OCP\Federation\Exceptions\BadRequestException;
-use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
 
 
 class EditorController extends Controller
@@ -58,8 +64,7 @@ class EditorController extends Controller
     private $urlGenerator;
     private $trans;
     private $logger;
-    private $appConfig;
-    private $personalConfig;
+    private $config;
     /**
      * Session
      *
@@ -92,21 +97,30 @@ class EditorController extends Controller
     /** @var IL10NFactory */
     private $l10nFactory;
 
-    public function __construct(                 $AppName,
-                                IRequest         $request,
-                                IRootFolder      $root,
-                                IUserSession     $userSession,
-                                IURLGenerator    $urlGenerator,
-                                IL10N            $trans,
-                                LoggerInterface  $logger,
-                                AppConfig        $appConfig,
-                                PersonalConfig   $personalConfig,
-                                IManager         $shareManager,
-                                ISession         $session,
+    /**
+     * @param string $AppName - application name
+     * @param IRequest $request - request object
+     * @param IRootFolder $root - root folder
+     * @param IUserSession $userSession - current user session
+     * @param IURLGenerator $urlGenerator - url generator service
+     * @param IL10N $trans - l10n service
+     * @param LoggerInterface $logger - logger
+     * @param OCA\Drawio\AppConfig $config - app config
+     */
+    public function __construct($AppName,
+                                IRequest $request,
+                                IRootFolder $root,
+                                IUserSession $userSession,
+                                IURLGenerator $urlGenerator,
+                                IL10N $trans,
+                                LoggerInterface $logger,
+                                AppConfig $config,
+                                IManager $shareManager,
+                                ISession $session,
                                 ILockingProvider $lockingProvider,
-                                IAppData         $appData,
-                                IConfig          $ncConfig,
-                                IL10NFactory     $l10nFactory,
+                                IAppData $appData,
+                                IConfig $ncConfig,
+                                IL10NFactory $l10nFactory,
                                 ?IVersionManager $versionManager = null
                                 )
     {
@@ -117,8 +131,7 @@ class EditorController extends Controller
         $this->urlGenerator = $urlGenerator;
         $this->trans = $trans;
         $this->logger = $logger;
-        $this->appConfig = $appConfig;
-        $this->personalConfig = $personalConfig;
+        $this->config = $config;
         $this->shareManager = $shareManager;
         $this->session = $session;
         $this->lockingProvider = $lockingProvider;
@@ -614,20 +627,11 @@ class EditorController extends Controller
             return new RedirectResponse($redirectUrl);
         }
 
-        $drawioUrl = $this->appConfig->GetDrawioUrl();
-        $theme = $this->personalConfig->GetTheme();
-        if ($theme === 'default') {
-            $theme = $this->appConfig->GetTheme();
-        }
-        $darkMode = $this->personalConfig->GetDarkMode();
-        if ($darkMode === 'auto') {
-            $darkMode = $this->appConfig->GetDarkMode();
-        }
-	    $offlineMode = $this->appConfig->GetOfflineMode();
-        $lang = $this->personalConfig->GetLang();
-        if ($lang === 'auto') {
-            $lang = $this->appConfig->GetLang();
-        }
+        $drawioUrl = $this->config->GetDrawioUrl();
+        $theme = $this->config->GetTheme();
+        $darkMode = $this->config->GetDarkMode();
+	    $offlineMode = $this->config->GetOfflineMode();
+        $lang = $this->config->GetLang();
         $lang = trim(strtolower($lang));
 
         if ("auto" === $lang)
@@ -665,14 +669,14 @@ class EditorController extends Controller
             "drawioDarkMode" => $darkMode,
             "drawioLang" => $lang,
             "drawioOfflineMode" => $offlineMode,
-            "drawioAutosave" =>$this->appConfig->GetAutosave(),
-            "drawioLibraries" =>$this->appConfig->GetLibraries(),
+            "drawioAutosave" =>$this->config->GetAutosave(),
+            "drawioLibraries" =>$this->config->GetLibraries(),
             "fileId" => $fileId,
             "shareToken" => $shareToken,
             "isWB" => $isWB,
             "drawioReadOnly" => $lightbox,
-            "drawioPreviews" => $this->appConfig->GetPreviews(),
-            "drawioConfig" => $this->appConfig->GetDrawioConfig(),
+            "drawioPreviews" => $this->config->GetPreviews(),
+            "drawioConfig" => $this->config->GetDrawioConfig(),
         ];
 
         if ($this->userSession->getUser() !== null)

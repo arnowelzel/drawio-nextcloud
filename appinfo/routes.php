@@ -11,7 +11,6 @@ return [
         ["name" => "editor#save", "url" => "/ajax/save", "verb" => "PUT"],
         ["name" => "editor#savePreview", "url" => "/ajax/savePreview", "verb" => "POST"],
 
-        ["name" => "adminSettings#settings", "url" => "/ajax/adminSettings", "verb" => "POST"],
-        ["name" => "personalSettings#settings", "url" => "/ajax/personalSettings", "verb" => "POST"],
+        ["name" => "settings#settings", "url" => "/ajax/settings", "verb" => "POST"],
     ]
 ];

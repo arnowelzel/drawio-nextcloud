@@ -2,7 +2,6 @@
 
 namespace OCA\Drawio\Settings;
 
-use OCA\Drawio\AppInfo\Application;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Settings\IIconSection;
@@ -19,7 +18,7 @@ class Section implements IIconSection {
 	}
 
 	public function getID() {
-		return Application::APP_ID;
+		return 'drawio';
 	}
 
 	public function getName() {
@@ -31,6 +30,6 @@ class Section implements IIconSection {
 	}
 
 	public function getIcon() {
-		return $this->url->imagePath(Application::APP_ID, 'app.svg');
+		return $this->url->imagePath('drawio', 'app.svg');
 	}
 }
