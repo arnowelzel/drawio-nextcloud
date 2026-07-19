@@ -1,5 +1,4 @@
 <?php
-
 namespace OCA\Drawio\Settings;
 
 use OCA\Drawio\Controller\PersonalSettingsController;
@@ -8,11 +7,10 @@ use OCP\Settings\IDelegatedSettings;
 
 class PersonalSettings implements IDelegatedSettings
 {
-    private PersonalSettingsController $settingsController;
-
-    public function __construct(PersonalSettingsController $settingsController)
+    public function __construct(
+        private PersonalSettingsController $settingsController
+    )
     {
-        $this->settingsController = $settingsController;
     }
 
     public function getName(): ?string
@@ -32,12 +30,12 @@ class PersonalSettings implements IDelegatedSettings
         return $this->settingsController->index();
     }
 
-    public function getSection()
+    public function getSection(): string
     {
         return "drawio";
     }
 
-    public function getPriority()
+    public function getPriority(): int
     {
         return 60;
     }

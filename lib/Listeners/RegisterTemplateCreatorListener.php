@@ -1,5 +1,4 @@
 <?php
-
 namespace OCA\Drawio\Listeners;
 
 use OCA\Drawio\AppConfig;
@@ -12,15 +11,17 @@ use OCP\IL10N;
 /**
  * @template-implements IEventListener<RegisterTemplateCreatorEvent>
  */
-class RegisterTemplateCreatorListener implements IEventListener {
-
+class RegisterTemplateCreatorListener implements IEventListener
+{
     public function __construct(
         private IL10N $l10n,
         private AppConfig $config,
-    ) {
+    )
+    {
     }
 
-    public function handle(Event $event): void {
+    public function handle(Event $event): void
+    {
         if (!($event instanceof RegisterTemplateCreatorEvent)) {
             return;
         }

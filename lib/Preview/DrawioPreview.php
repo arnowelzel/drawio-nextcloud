@@ -1,9 +1,9 @@
 <?php
-
 namespace OCA\Drawio\Preview;
 
+use OCA\Drawio\AppConfig;
+use OCA\Drawio\AppInfo\Application;
 use OCP\Preview\IProviderV2;
-
 use OCP\Files\File;
 use OCP\Files\FileInfo;
 use OCP\Files\IAppData;
@@ -12,17 +12,8 @@ use OCP\IImage;
 use OCP\Image;
 use Psr\Log\LoggerInterface;
 
-use OCA\Drawio\AppConfig;
-use OCA\Drawio\AppInfo\Application;
-
 class DrawioPreview implements IProviderV2
 {
-    protected $appConfig;
-    protected $logger;
-    protected $appName;
-    /** @var IAppData */
-    protected $appData;
-
     /**
      * Capabilities mimetype
      *
@@ -33,18 +24,21 @@ class DrawioPreview implements IProviderV2
         "application/x-drawio-wb"
     ];
 
-    public function __construct(LoggerInterface $logger, IAppData $appData, AppConfig $appConfig)
+    public function __construct(
+        private LoggerInterface $logger,
+        private IAppData $appData,
+        private AppConfig $appConfig)
     {
         $this->logger = $logger;
         $this->appData = $appData;
-        $this->appName = Application::APP_ID;
         $this->appConfig = $appConfig;
     }
 
     /**
      * Return mime type
      */
-    public static function getMimeTypeRegex() {
+    public static function getMimeTypeRegex()
+    {
         $mimeTypeRegex = "";
         foreach (self::$capabilities as $format) {
             if (!empty($mimeTypeRegex)) {
@@ -89,20 +83,15 @@ class DrawioPreview implements IProviderV2
         return null;
     }
 
-    private function getPreviewFile($fileId)
+    private function getPreviewFile($fileId): \OCP\Files\SimpleFS\ISimpleFile|false
     {
-        try
-        {
+        try {
             return $this->appData->getFolder('previews')->getFile($fileId . '.png');
-        }
-        catch (NotFoundException $e)
-        {
+        } catch (NotFoundException $e) {
             // ignore
             return false;
-        }
-        catch (\Exception $e)
-        {
-            $this->logger->error($e->getMessage(), ["message" => "Can't get preview file", "app" => $this->appName, 'exception' => $e]);
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage(), ["message" => "Can't get preview file", "app" => Application::APP_ID, 'exception' => $e]);
             return false;
         }
     }

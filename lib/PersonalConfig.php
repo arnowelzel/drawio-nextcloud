@@ -2,20 +2,17 @@
 
 namespace OCA\Drawio;
 
+use OCA\Drawio\AppInfo\Application;
+use OCP\Config\IUserConfig;
 use OCP\IConfig;
 use OCP\IUserSession;
+use OCP\PreConditionNotMetException;
 use Psr\Log\LoggerInterface;
 
 class PersonalConfig {
     private $predefTheme = "default";
     private $predefLang = "auto";
     private $predefDarkMode = "auto";
-
-    private $appName;
-
-    private $config;
-
-    private $logger;
 
     private $UID;
 
@@ -24,53 +21,54 @@ class PersonalConfig {
     private $_lang = "DrawioLang";
     private $_darkmode = "DrawioDarkMode";
 
-    public function __construct($AppName, IConfig $config, IUserSession $userSession, LoggerInterface $logger)
+    public function __construct(
+        private IConfig $config,
+        private IUserConfig $userConfig,
+        private LoggerInterface $logger,
+        IUserSession $userSession
+    )
     {
-        $this->appName = $AppName;
-        $this->config = $config;
-        $this->logger = $logger;
-
         $this->UID = null;
         if ($userSession->getUser()) {
             $this->UID = $userSession->getUser()->getUID();
         }
     }
 
-    public function SetTheme($theme)
+    public function SetTheme($theme): void
     {
-        $this->logger->info("SetTheme: " . $theme, array("app" => $this->appName));
-        $this->config->setUserValue($this->UID, $this->appName, $this->_theme, $theme);
+        $this->logger->info("SetTheme: " . $theme, array("app" => Application::APP_ID));
+        $this->userConfig->setValueString($this->UID, Application::APP_ID, $this->_theme, $theme);
     }
 
-    public function GetTheme()
+    public function GetTheme(): string
     {
-        $val = $this->config->getUserValue($this->UID, $this->appName, $this->_theme);
+        $val = $this->userConfig->getValueString($this->UID, Application::APP_ID, $this->_theme);
         if (empty($val)) $val = $this->predefTheme;
         return $val;
     }
 
-    public function SetLang($lang)
+    public function SetLang($lang): void
     {
-        $this->logger->info("SetLang: " . $lang, array("app" => $this->appName));
-        $this->config->setUserValue($this->UID, $this->appName, $this->_lang, $lang);
+        $this->logger->info("SetLang: " . $lang, array("app" => Application::APP_ID));
+        $this->userConfig->setValueString($this->UID, Application::APP_ID, $this->_lang, $lang);
     }
 
-    public function GetLang()
+    public function GetLang(): string
     {
-        $val = $this->config->getUserValue($this->UID, $this->appName, $this->_lang);
+        $val = $this->userConfig->getValueString($this->UID, Application::APP_ID, $this->_lang);
         if (empty($val)) $val = $this->predefLang;
         return $val;
     }
 
-    public function SetDarkMode($darkmode)
+    public function SetDarkMode($darkmode): void
     {
-        $this->logger->info("SetDarkMode: " . $darkmode, array("app" => $this->appName));
-        $this->config->setUserValue($this->UID, $this->appName, $this->_darkmode, $darkmode);
+        $this->logger->info("SetDarkMode: " . $darkmode, array("app" => Application::APP_ID));
+        $this->userConfig->setValueString($this->UID, Application::APP_ID, $this->_darkmode, $darkmode);
     }
     
-    public function GetDarkMode()
+    public function GetDarkMode(): string
     {
-        $val = $this->config->getUserValue($this->UID, $this->appName, $this->_darkmode);
+        $val = $this->userConfig->getValueString($this->UID, Application::APP_ID, $this->_darkmode);
         if (empty($val))
         {
             if ($this->GetTheme() == "dark")

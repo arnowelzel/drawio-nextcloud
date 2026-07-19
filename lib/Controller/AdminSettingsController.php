@@ -1,5 +1,4 @@
 <?php
-
 namespace OCA\Drawio\Controller;
 
 use OCA\Drawio\AppConfig;
@@ -13,27 +12,16 @@ use OCP\Util;
 
 class AdminSettingsController extends Controller
 {
-    private $config;
-
-    /**
-     * @param IRequest $request - request object
-     * @param AppConfig $config - application configuration
-     */
-    public function __construct(IRequest $request,
-                                AppConfig $config
-                                )
+    public function __construct(
+        IRequest $request,
+        private AppConfig $config
+    )
     {
         parent::__construct(Application::APP_ID, $request);
-
-        $this->config = $config;
     }
 
-    /**
-     * Config page
-     *
-     * @return TemplateResponse
-     */
-    public function index() {
+    public function index(): TemplateResponse
+    {
         $data = [
             "drawioUrl" => $this->config->GetDrawioUrl(),
             "drawioOfflineMode" => $this->config->GetOfflineMode(),
@@ -53,11 +41,8 @@ class AdminSettingsController extends Controller
         return new TemplateResponse($this->appName, "adminSettings", $data, TemplateResponse::RENDER_AS_BLANK);
     }
 
-	/**
-	 * Save settings
-	 */
     #[AuthorizedAdminSetting(settings: AdminSettings::class)]
-    public function settings()
+    public function settings(): array
     {
         $drawio = trim($this->request->getParam('drawioUrl', ''));
         $offlinemode = trim($this->request->getParam('offlineMode', ''));

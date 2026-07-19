@@ -1,14 +1,4 @@
 <?php
-
-/**
- *
- * @author Pawel Rojek <pawel at pawelrojek.com>
- * @author Ian Reinhart Geiser <igeiser at devonit.com>
- *
- * This file is licensed under the Affero General Public License version 3 or later.
- *
- **/
-
 namespace OCA\Drawio\AppInfo;
 
 use OCA\Drawio\Listeners\DrawioReferenceListener;
@@ -28,8 +18,8 @@ use OCP\Files\Events\Node\NodeDeletedEvent;
 use OCP\Files\IMimeTypeDetector;
 use OCP\Files\Template\RegisterTemplateCreatorEvent;
 
-class Application extends App implements IBootstrap {
-
+class Application extends App implements IBootstrap
+{
     public const APP_ID = 'drawio';
 
     public function __construct(array $urlParams = [])
@@ -57,7 +47,7 @@ class Application extends App implements IBootstrap {
     {
         $context->injectFn(function (IMimeTypeDetector $detector): void {
             // There is no OCP API to register MIME types at runtime yet
-            // (see https://github.com/nextcloud/server/issues/10131), so this
+            // (see https://github.com/nextcloud/server/issues/9192), so this
             // relies on the OC\Files\Type\Detection implementation. It backs up
             // the config/mimetypemapping.json entries written by the repair step
             // for setups where the config directory is not writable.
