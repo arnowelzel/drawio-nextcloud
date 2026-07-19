@@ -103,7 +103,7 @@ When a draw.io editor URL is pasted into Nextcloud Text, Collectives, Talk, Note
 5. Smart Picker (`/` menu) lists "Draw.io Diagrams" via `ISearchableReferenceProvider`
 
 ### Template Creator
-`RegisterTemplateCreatorListener` registers `.drawio` and `.dwb` as file types in the Nextcloud "+" new file menu via `RegisterTemplateCreatorEvent`. This also enables creating diagrams as Text document attachments (stored in `.attachments.{docId}/` folders). The editor detects attachment paths on close and redirects to the parent document.
+`RegisterTemplateCreatorListener` registers `.drawio` and `.dwb` as file types in the Nextcloud "+" new file menu via `RegisterTemplateCreatorEvent`. The `.dwb` whiteboard creator is only registered when the "Enable whiteboards?" admin setting (`AppConfig::GetWhiteboards`) is `yes`. This also enables creating diagrams as Text document attachments (stored in `.attachments.{docId}/` folders). The editor detects attachment paths on close and redirects to the parent document.
 
 ### API Routes (all under `/apps/drawio/`)
 | Method | URL                    | Controller Method        |
