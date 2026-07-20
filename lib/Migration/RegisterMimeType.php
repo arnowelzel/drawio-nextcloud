@@ -1,21 +1,13 @@
 <?php
 namespace OCA\Drawio\Migration;
 
-use OCA\Drawio\AppInfo\Application;
 use OCP\Files\IMimeTypeLoader;
-use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 
 class RegisterMimeType extends MimeTypeMigration
 {
-    // Set once the leftovers of app versions up to 4.2.x have been removed, so
-    // that an administrator who deliberately restores the core icons and
-    // aliases afterwards keeps them.
-    const CLEANUP_FLAG = 'LegacyCoreCleanupDone';
-
     public function __construct(
-        IMimeTypeLoader $mimeTypeLoader,
-        private IAppConfig $appConfig
+        IMimeTypeLoader $mimeTypeLoader
     )
     {
         parent::__construct($mimeTypeLoader);
@@ -48,27 +40,6 @@ class RegisterMimeType extends MimeTypeMigration
         ]);
     }
 
-    /**
-     * Undo what app versions up to 4.2.x changed outside of this app, which
-     * makes "occ integrity:check-core" report EXTRA_FILE for the icons. Runs
-     * once per instance.
-     *
-     * core/js/mimetypelist.js cannot be repaired from here: its original
-     * content is only known to the Nextcloud release, so restoring it stays a
-     * manual step for the administrator.
-     */
-    private function cleanUpLegacyCoreChanges(IOutput $output): void
-    {
-        if ($this->appConfig->getValueString(Application::APP_ID, self::CLEANUP_FLAG) === 'yes') {
-            return;
-        }
-
-        $this->removeLegacyCoreIcons($output);
-        $this->removeFromFile(\OC::$configDir . self::CUSTOM_MIMETYPEALIASES, self::LEGACY_ALIASES);
-
-        $this->appConfig->setValueString(Application::APP_ID, self::CLEANUP_FLAG, 'yes');
-    }
-
     public function run(IOutput $output): void
     {
         $output->info('Registering the mimetype...');
@@ -78,9 +49,6 @@ class RegisterMimeType extends MimeTypeMigration
 
         // Register the mime type for new files
         $this->registerForNewFiles();
-
-        // Clean up what older versions changed in the Nextcloud core
-        $this->cleanUpLegacyCoreChanges($output);
 
         $output->info('The mimetype was successfully registered.');
     }
