@@ -12,126 +12,132 @@
 namespace OCA\Drawio\AppInfo;
 
 use OCP\AppFramework\App;
-use OCP\AppFramework\Bootstrap\IBootContext;
-use OCP\AppFramework\Bootstrap\IBootstrap;
-use OCP\AppFramework\Bootstrap\IRegistrationContext;
-use OCP\IConfig;
 use OCP\Util;
+use OCP\IPreview;
 use OCP\Files\IMimeTypeDetector;
-use OCP\Files\IMimeTypeLoader;
-
-use OCP\AppFramework\Services\IInitialState;
 
 use OCA\Drawio\AppConfig;
+use OCA\Drawio\Controller\DisplayController;
+use OCA\Drawio\Controller\EditorController;
+use OCA\Drawio\Controller\ViewerController;
+use OCA\Drawio\Controller\SettingsController;
 use OCA\Drawio\Preview\DrawioPreview;
 use OCA\Drawio\Listeners\FileDeleteListener;
-use OCA\Drawio\Listeners\DrawioReferenceListener;
-use OCA\Drawio\Listeners\RegisterTemplateCreatorListener;
-use OCA\Drawio\Reference\DrawioReferenceProvider;
 
-use OCP\Collaboration\Reference\RenderReferenceEvent;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\Events\Node\NodeDeletedEvent;
-use OCP\Files\Template\RegisterTemplateCreatorEvent;
+use OCP\Files\IAppData;
 use Psr\Log\LoggerInterface;
 
 
-class Application extends App implements IBootstrap {
+class Application extends App {
+
+    public $appConfig;
 
     public function __construct(array $urlParams = [])
     {
-        parent::__construct("drawio", $urlParams);
-    }
+        $appName = "drawio";
 
-    public function register(IRegistrationContext $context): void
-    {
-        $context->registerEventListener(NodeDeletedEvent::class, FileDeleteListener::class);
-        $context->registerEventListener(RenderReferenceEvent::class, DrawioReferenceListener::class);
-        $context->registerEventListener(RegisterTemplateCreatorEvent::class, RegisterTemplateCreatorListener::class);
+        parent::__construct($appName, $urlParams);
 
-        $context->registerReferenceProvider(DrawioReferenceProvider::class);
+        $this->appConfig = new AppConfig($appName);
 
-        $context->registerPreviewProvider(
-            DrawioPreview::class,
-            DrawioPreview::getMimeTypeRegex()
-        );
+        // Default script and style if configured
+        if (!empty($this->appConfig->GetDrawioUrl()) && array_key_exists("REQUEST_URI", \OC::$server->getRequest()->server))
+        {
+            $url = \OC::$server->getRequest()->server["REQUEST_URI"];
 
-        $context->registerService(AppConfig::class, function ($c) {
-            return new AppConfig(
-                'drawio',
-                $c->get(IConfig::class),
-                $c->get(LoggerInterface::class)
+            if (isset($url)) {
+                if (preg_match("%/apps/files(/.*)?%", $url) || preg_match("%/s/.*%", $url)) // Files app and file sharing
+                {
+                    Util::addScript($appName, "main");
+                    Util::addStyle($appName, "main");
+                }
+            }
+        }
+        
+        $container = $this->getContainer();
+
+        $container->registerService("L10N", function($c)
+        {
+            return $c->query("ServerContainer")->getL10N($c->query("AppName"));
+        });
+
+        $container->registerService("RootStorage", function($c)
+        {
+            return $c->query("ServerContainer")->getRootFolder();
+        });
+
+        $container->registerService("UserSession", function($c)
+        {
+            return $c->query("ServerContainer")->getUserSession();
+        });
+
+        $container->registerService("Logger", function($c)
+        {
+            return $c->query("ServerContainer")->get(LoggerInterface::class);
+        });
+
+
+        $container->registerService("SettingsController", function($c)
+        {
+            return new SettingsController(
+                $c->query("AppName"),
+                $c->query("Request"),
+                $c->query("L10N"),
+                $c->query("Logger"),
+                $this->appConfig
             );
         });
-    }
 
-    public function boot(IBootContext $context): void
-    {
-        Util::addInitScript("drawio", "main");
-        Util::addStyle("drawio", "main");
 
-        $container = $context->getAppContainer();
+        $container->registerService("EditorController", function($c)
+        {
+            return new EditorController(
+                $c->query("AppName"),
+                $c->query("Request"),
+                $c->query("RootStorage"),
+                $c->query("UserSession"),
+                $c->query("ServerContainer")->getURLGenerator(),
+                $c->query("L10N"),
+                $c->query("Logger"),
+                $this->appConfig,
+                $c->query("IManager"),
+                $c->query("Session"),
+                \OC::$server->getLockingProvider(),
+                \OC::$server->get(IAppData::class)
+            );
+        });
+        
+        $container->registerService("ViewerController", function($c)
+        {
+            return new ViewerController(
+                $c->query("AppName"),
+                $c->query("Request"),
+                $c->query("RootStorage"),
+                $c->query("UserSession"),
+                $c->query("ServerContainer")->getURLGenerator(),
+                $c->query("L10N"),
+                $c->query("Logger"),
+                $this->appConfig,
+                $c->query("IManager"),
+                $c->query("Session")
+            );
+        }); 
+        
+        $previewManager = $container->query(IPreview::class);
+        $previewManager->registerProvider(DrawioPreview::getMimeTypeRegex(), function() use ($container) {
+            return $container->query(DrawioPreview::class);
+        });
 
-        $initialState = $container->get(IInitialState::class);
-        $appConfig = $container->get(AppConfig::class);
-        $initialState->provideInitialState('whiteboards', $appConfig->GetWhiteboards());
-        $detector = $container->get(IMimeTypeDetector::class);
+        $detector = $container->query(IMimeTypeDetector::class);
         $detector->getAllMappings();
         $detector->registerType("drawio", "application/x-drawio");
         $detector->registerType("dwb", "application/x-drawio-wb");
 
-        $this->ensureMimeTypeAssets($container, $appConfig, $detector);
-    }
-
-    /**
-     * Self-healing check: re-register MIME type assets if they were lost
-     * (e.g., after a Nextcloud core upgrade that replaces core/ files).
-     */
-    private function ensureMimeTypeAssets($container, AppConfig $appConfig, IMimeTypeDetector $detector): void
-    {
-        $currentNcVersion = $container->get(\OCP\ServerVersion::class)->getVersionString();
-        $storedNcVersion = $appConfig->GetNcVersion();
-
-        $needsRepair = ($storedNcVersion !== $currentNcVersion);
-
-        if (!$needsRepair) {
-            $iconTarget = \OC::$SERVERROOT . '/core/img/filetypes/drawio.svg';
-            if (!file_exists($iconTarget)) {
-                $needsRepair = true;
-            }
-        }
-
-        if (!$needsRepair) {
-            return;
-        }
-
-        try {
-            $logger = $container->get(LoggerInterface::class);
-            $logger->info('Draw.io: Re-registering MIME type assets (NC version: ' .
-                $storedNcVersion . ' -> ' . $currentNcVersion . ')', ['app' => 'drawio']);
-
-            $mimeTypeLoader = $container->get(IMimeTypeLoader::class);
-            $updateJS = new \OC\Core\Command\Maintenance\Mimetype\UpdateJS($detector);
-            $mime = new \OCA\Drawio\Migration\RegisterMimeType($mimeTypeLoader, $updateJS);
-
-            $output = new class($logger) implements \OCP\Migration\IOutput {
-                private $logger;
-                public function __construct($logger) { $this->logger = $logger; }
-                public function debug(string $message): void { $this->logger->debug($message, ['app' => 'drawio']); }
-                public function info($message) { $this->logger->info($message, ['app' => 'drawio']); }
-                public function warning($message) { $this->logger->warning($message, ['app' => 'drawio']); }
-                public function startProgress($max = 0): void {}
-                public function advance($step = 1, $description = ''): void {}
-                public function finishProgress(): void {}
-            };
-
-            $mime->run($output);
-            $appConfig->SetNcVersion($currentNcVersion);
-
-            $logger->info('Draw.io: MIME type assets re-registered successfully', ['app' => 'drawio']);
-        } catch (\Exception $e) {
-            $logger = $container->get(LoggerInterface::class);
-            $logger->warning('Draw.io: Failed to re-register MIME type assets: ' . $e->getMessage(),
-                ['app' => 'drawio', 'exception' => $e]);
-        }
+        $server = $container->getServer();
+        /** @var IEventDispatcher $eventDispatcher */
+		$newEventDispatcher = $server->query(IEventDispatcher::class);
+        $newEventDispatcher->addServiceListener(NodeDeletedEvent::class, FileDeleteListener::class);
     }
 }

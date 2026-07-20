@@ -13,6 +13,7 @@ namespace OCA\Drawio\Controller;
 
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\Template\PublicTemplateResponse;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
@@ -31,8 +32,9 @@ use OCP\Share\IManager;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
-use OCP\IConfig;
-use OCP\L10N\IFactory as IL10NFactory;
+use OC\Files\Filesystem;
+use OC\Files\View;
+use OC\User\NoUserException;
 use OCP\Lock\ILockingProvider;
 
 use OCA\Files\Helper;
@@ -40,10 +42,12 @@ use OCP\Files\IAppData;
 use OCA\Files_Versions\Storage;
 use OCA\Files_Versions\Versions\IVersionManager;
 use OCA\Files_Versions\Versions\IVersion;
+use OCA\Viewer\Event\LoadViewer;
+
 use OCA\Drawio\AppConfig;
 
 
-use OCP\HintException;
+use OC\HintException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\Files\File;
@@ -51,7 +55,6 @@ use OCP\Files\Folder;
 use OCP\Files\ForbiddenException;
 use OCP\Files\GenericFileException;
 use OCP\Files\NotFoundException;
-use OCP\Files\NotPermittedException;
 use OCP\Lock\LockedException;
 use OCP\Federation\Exceptions\BadRequestException;
 
@@ -87,15 +90,9 @@ class EditorController extends Controller
 	 * @var OCA\Files_Versions\Versions\IVersionManager
 	 */
 	protected $versionManager;
-
+    
     /** @var IAppData */
     private $appData;
-
-    /** @var IConfig */
-    private $ncConfig;
-
-    /** @var IL10NFactory */
-    private $l10nFactory;
 
     /**
      * @param string $AppName - application name
@@ -118,10 +115,7 @@ class EditorController extends Controller
                                 IManager $shareManager,
                                 ISession $session,
                                 ILockingProvider $lockingProvider,
-                                IAppData $appData,
-                                IConfig $ncConfig,
-                                IL10NFactory $l10nFactory,
-                                ?IVersionManager $versionManager = null
+                                IAppData $appData
                                 )
     {
         parent::__construct($AppName, $request);
@@ -136,9 +130,15 @@ class EditorController extends Controller
         $this->session = $session;
         $this->lockingProvider = $lockingProvider;
         $this->appData = $appData;
-        $this->ncConfig = $ncConfig;
-        $this->l10nFactory = $l10nFactory;
-        $this->versionManager = $versionManager;
+
+        try
+        {
+            $this->versionManager = \OC::$server->get(IVersionManager::class);
+        }
+        catch (\Exception $e)
+        {
+            $this->logger->info('VersionManager not found, Versions plugin may not be enabled.', ['app' => $this->appName]);
+        }
     }
 
     /**
@@ -289,7 +289,7 @@ class EditorController extends Controller
                         'shareToken' => $shareToken,
                         'versionsEnabled' => empty($shareToken) && isset($this->versionManager),
                         'ver' => 2,
-                        'instanceId' => $this->ncConfig->getSystemValueString('instanceid', '')
+                        'instanceId' => \OC_Util::getInstanceId()
                     ],
                     Http::STATUS_OK
                 );
@@ -362,7 +362,7 @@ class EditorController extends Controller
                     'shareToken' => $shareToken,
                     'versionsEnabled' => empty($shareToken) && isset($this->versionManager),
                     'ver' => 2,
-                    'instanceId' => $this->ncConfig->getSystemValueString('instanceid', '')
+                    'instanceId' => \OC_Util::getInstanceId()
                 ],
                 Http::STATUS_OK
             );
@@ -614,7 +614,7 @@ class EditorController extends Controller
 
         if ("auto" === $lang)
         {
-            $lang = $this->l10nFactory->findLanguage();
+            $lang = \OC::$server->getL10NFactory("")->get("")->getLanguageCode();
 
             if (!empty($lang) && strpos($lang, "_"))
             {
@@ -702,33 +702,15 @@ class EditorController extends Controller
             throw new NotFoundException();
         }
 
-        if ($share === null || $share === false ||
-            ($share->getPassword() !== null && !$this->isShareAuthenticated($share)) ||
+        if ($share === null || $share === false || 
+            ($share->getPassword() !== null && (!$this->session->exists("public_link_authenticated")
+                || $this->session->get("public_link_authenticated") !== (string) $share->getId())) ||
             !$this->checkPermissions($share, Constants::PERMISSION_READ))
         {
-            throw new ForbiddenException('Insufficient permissions', false);
+            throw new ForbiddenException();
         }
 
         return [$share->getNode(), $share];
-    }
-
-    /**
-     * Check if the current session has authenticated for a password-protected share.
-     * Nextcloud stores authenticated share IDs as an array in the session,
-     * but we also handle the legacy string format for compatibility.
-     *
-     * @param \OCP\Share\IShare $share
-     *
-     * @return bool
-     */
-    private function isShareAuthenticated($share)
-    {
-        $authenticated = $this->session->get("public_link_authenticated");
-        if (is_array($authenticated))
-        {
-            return in_array($share->getId(), $authenticated);
-        }
-        return $authenticated === (string) $share->getId();
     }
 
 
@@ -751,7 +733,7 @@ class EditorController extends Controller
 
         if (!$file->isReadable())
         {
-            throw new ForbiddenException('Insufficient permissions', false);
+            throw new ForbiddenException();
         }
 
         return $file;
@@ -771,17 +753,12 @@ class EditorController extends Controller
         $file = null;
         $writeable = false;
         $baseFolder = null;
-        $share = null;
 
         if (!empty($fileId) && $this->userSession->isLoggedIn()) 
         {
             $file = $this->getFileById($fileId);
             $uid = $this->userSession->getUser()->getUID();
             $baseFolder = $this->root->getUserFolder($uid);
-            if (!empty($shareToken))
-            {
-                $share = $this->shareManager->getShareByToken($shareToken);  // Have fileId and shareToken, and be logged in, get $share
-            }
         }
         else if (!empty($shareToken))
         {

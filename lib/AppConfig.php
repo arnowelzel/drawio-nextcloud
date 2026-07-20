@@ -24,7 +24,6 @@ class AppConfig {
     private $predefLibraries = "no";
     private $predefDarkMode = "auto";
     private $predefPreviews = "yes";
-    private $predefWhiteboards = "yes";
 
     private $appName;
 
@@ -42,14 +41,13 @@ class AppConfig {
     private $_darkmode = "DrawioDarkMode";
     private $_previews = "DrawioPreviews";
     private $_drawioConfig = "DrawioConfig";
-    private $_whiteboards = "DrawioWhiteboards";
-    private $_ncVersion = "DrawioNcVersion";
 
-    public function __construct($AppName, IConfig $config, LoggerInterface $logger)
+    public function __construct($AppName)
     {
         $this->appName = $AppName;
-        $this->config = $config;
-        $this->logger = $logger;
+
+        $this->config = \OC::$server->getConfig();
+        $this->logger = \OC::$server->get(LoggerInterface::class);
     }
 
     public function SetDrawioUrl($drawio)
@@ -172,19 +170,6 @@ class AppConfig {
         return $val;
     }
     
-    public function SetWhiteboards($whiteboards)
-    {
-        $this->logger->info("SetWhiteboards: " . $whiteboards, array("app" => $this->appName));
-        $this->config->setAppValue($this->appName, $this->_whiteboards, $whiteboards);
-    }
-
-    public function GetWhiteboards()
-    {
-        $val = $this->config->getAppValue($this->appName, $this->_whiteboards);
-        if (empty($val)) $val = $this->predefWhiteboards;
-        return $val;
-    }
-
     public function SetDrawioConfig($drawioConfig)
     {
         $this->logger->info("SetDrawioConfig: " . $drawioConfig, array("app" => $this->appName));
@@ -205,16 +190,6 @@ class AppConfig {
         {
             return $val;
         }
-    }
-
-    public function SetNcVersion($version)
-    {
-        $this->config->setAppValue($this->appName, $this->_ncVersion, $version);
-    }
-
-    public function GetNcVersion()
-    {
-        return $this->config->getAppValue($this->appName, $this->_ncVersion, '');
     }
 
     public function GetAppName()

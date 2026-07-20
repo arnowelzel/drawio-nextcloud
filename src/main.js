@@ -15,6 +15,7 @@ import { showError } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
 import {
 	DefaultType,
+	FileAction,
 	addNewFileMenuEntry,
 	registerFileAction,
 	File,
@@ -23,7 +24,6 @@ import {
 } from '@nextcloud/files'
 import { getCurrentUser } from '@nextcloud/auth'
 import { emit } from '@nextcloud/event-bus'
-import { loadState } from '@nextcloud/initial-state'
 
 // Some code is inspired by Mind Map app (https://github.com/ACTom/files_mindmap)
 
@@ -58,21 +58,21 @@ OCA.DrawIO = {
     {
         function registerAction(ext, attr)
         {
-            registerFileAction({
+            registerFileAction(new FileAction({
                 id: 'drawioOpen' + ext,
                 displayName() {
-                    return t(OCA.DrawIO.AppName, 'Open in Draw.io')
+                    t(OCA.DrawIO.AppName, 'Open in Draw.io')
                 },
-                enabled(context) {
-                    return context.nodes.length === 1 && attr.mime === context.nodes[0].mime && (context.nodes[0].permissions & Permission.READ) !== 0
+                enabled(nodes) {
+                    return nodes.length === 1 && attr.mime === nodes[0].mime && (nodes[0].permissions & OC.PERMISSION_READ) !== 0
                 },
                 iconSvgInline: () => attr.icon,
-                async exec(context) {
-                    OCA.DrawIO.OpenEditor(context.nodes[0].fileid, ext == 'dwb');
+                async exec(node, view) {
+                    OCA.DrawIO.OpenEditor(node.fileid, ext == 'dwb');
                     return true;
                 },
                 default: DefaultType.HIDDEN
-            });
+            }));
         }
         
         for (const ext in OCA.DrawIO.Mimes) 
@@ -141,9 +141,9 @@ OCA.DrawIO = {
                 id: 'drawIoDiagram_' + ext,
                 displayName: attr.newStr,
                 enabled(node) {
-                    return (node.permissions & Permission.CREATE) !== 0;
+                    return (node.permissions & OC.PERMISSION_CREATE) !== 0;
                 },
-                iconSvgInline: attr.icon,
+                iconClass: attr.css,
                 async handler(context, content)
                 {
                     const contentNames = content.map((node) => node.basename);
@@ -153,11 +153,8 @@ OCA.DrawIO = {
             });
         }
 
-        var whiteboardsEnabled = loadState('drawio', 'whiteboards', 'yes') === 'yes';
-
-        for (const ext in OCA.DrawIO.Mimes)
+        for (const ext in OCA.DrawIO.Mimes) 
         {
-            if (ext === 'dwb' && !whiteboardsEnabled) continue;
             addMenuEntry(ext, OCA.DrawIO.Mimes[ext]);
         }
     },
@@ -172,14 +169,4 @@ OCA.DrawIO = {
 $(function () 
 {
     OCA.DrawIO.init();
-    
-    // Sometimes the file doesn't open, so we add a delayed attempt as well
-    setTimeout(() => 
-    {
-        if (window.location.pathname.startsWith('/s/'))
-        {
-            // TODO Add whiteboard support for public shares
-            OCA.DrawIO.OpenEditor(null, false);
-        }
-    }, 10000);
 });

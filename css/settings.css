@@ -1,54 +1,23 @@
 
-#drawio h2 {
+.section-drawio h2
+{
     display: inline;
 }
 
-#drawio .drawio-setting {
-    margin-top: 20px;
-}
-
-#drawio .drawio-setting label {
-    display: block;
+.drawio-header
+{
+    margin-top: 16px;
     font-weight: 700;
-    margin-bottom: 4px;
 }
 
-#drawio .drawio-setting input[type="text"] {
+.section-drawio input
+{
     display: block;
-    width: 350px;
-    margin: 0;
+    margin: 6px 0 4px;
+    width: 250px;
 }
 
-#drawio .drawio-setting select {
-    display: block;
-    width: 200px;
-    margin: 0;
-}
-
-#drawio .drawio-setting textarea {
-    display: block;
-    width: 75%;
-    min-width: 350px;
-    max-width: 600px;
-    height: 300px;
-    margin: 0;
-    font-family: monospace;
-    font-size: 13px;
-    resize: vertical;
-}
-
-#drawio .drawio-hint {
-    margin-top: 4px;
-    margin-bottom: 0;
-    color: var(--color-text-maxcontrast);
-    font-size: 13px;
-}
-
-#drawio #drawioSave {
-    display: inline-block;
-    margin-top: 24px;
-}
-
-#drawio .drawio-hide {
+.drawio-hide
+{
     display: none;
 }

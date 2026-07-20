@@ -14,13 +14,13 @@ namespace OCA\Drawio\Controller;
 
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\TemplateResponse;
-use OCP\Files\IMimeTypeLoader;
-use OCP\Files\IMimeTypeDetector;
 use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 use OCA\Drawio\AppConfig;
+use OCA\Drawio\Migration;
 
 class SettingsController extends Controller
 {
@@ -28,8 +28,6 @@ class SettingsController extends Controller
     private $trans;
     private $logger;
     private $config;
-    private $mimeTypeLoader;
-    private $mimeTypeDetector;
 
 
     /**
@@ -37,17 +35,13 @@ class SettingsController extends Controller
      * @param IRequest $request - request object
      * @param IL10N $trans - l10n service
      * @param LoggerInterface $logger - logger
-     * @param AppConfig $config - application configuration
-     * @param IMimeTypeLoader $mimeTypeLoader - MIME type loader
-     * @param IMimeTypeDetector $mimeTypeDetector - MIME type detector
+     * @param OCA\Drawio\AppConfig $config - application configuration
      */
     public function __construct($AppName,
                                 IRequest $request,
                                 IL10N $trans,
                                 LoggerInterface $logger,
-                                AppConfig $config,
-                                IMimeTypeLoader $mimeTypeLoader,
-                                IMimeTypeDetector $mimeTypeDetector
+                                AppConfig $config
                                 )
     {
         parent::__construct($AppName, $request);
@@ -55,8 +49,6 @@ class SettingsController extends Controller
         $this->trans = $trans;
         $this->logger = $logger;
         $this->config = $config;
-        $this->mimeTypeLoader = $mimeTypeLoader;
-        $this->mimeTypeDetector = $mimeTypeDetector;
     }
 
 
@@ -76,7 +68,6 @@ class SettingsController extends Controller
             "drawioDarkMode" => $this->config->GetDarkMode(),
             "drawioPreviews" => $this->config->GetPreviews(),
             "drawioConfig" => $this->config->GetDrawioConfig(),
-            "drawioWhiteboards" => $this->config->GetWhiteboards(),
         ];
         return new TemplateResponse($this->appName, "settings", $data, "blank");
     }
@@ -88,16 +79,15 @@ class SettingsController extends Controller
 	 */
     public function settings()
     {
-        $drawio = trim($this->request->getParam('drawioUrl', ''));
-        $offlinemode = trim($this->request->getParam('offlineMode', ''));
-        $theme = trim($this->request->getParam('theme', ''));
-        $lang = trim($this->request->getParam('lang', ''));
-        $autosave = trim($this->request->getParam('autosave', ''));
-        $libraries = trim($this->request->getParam('libraries', ''));
-        $darkmode = trim($this->request->getParam('darkMode', ''));
-        $previews = trim($this->request->getParam('previews', ''));
-        $drawioConfig = trim($this->request->getParam('drawioConfig', ''));
-        $whiteboards = trim($this->request->getParam('whiteboards', ''));
+        $drawio = trim($_POST['drawioUrl']);
+        $offlinemode = trim($_POST['offlineMode']);
+        $theme = trim($_POST['theme']);
+        $lang = trim($_POST['lang']);
+        $autosave = trim($_POST['autosave']);
+        $libraries = trim($_POST['libraries']);
+        $darkmode = trim($_POST['darkMode']);
+        $previews = trim($_POST['previews']);
+        $drawioConfig = trim($_POST['drawioConfig']);
 
         $this->config->SetDrawioUrl($drawio);
         $this->config->SetOfflineMode($offlinemode);
@@ -108,28 +98,18 @@ class SettingsController extends Controller
         $this->config->SetDarkMode($darkmode);
         $this->config->SetPreviews($previews);
         $this->config->SetDrawioConfig($drawioConfig);
-        $this->config->SetWhiteboards($whiteboards);
 
-        $checkmime = new \OCA\Drawio\Migration\CheckMimeType();
-        $registered = $checkmime->run();
+        if (version_compare(implode(".", \OCP\Util::getVersion()), "13", ">=")) {
+            $checkmime = new \OCA\Drawio\Migration\CheckMimeType();
+            $registered = $checkmime->run();
 
-        if ($registered == false) {
-            // NOTE: UpdateJS is an internal Nextcloud class (OC\Core\Command\Maintenance\Mimetype\UpdateJS).
-            // There is no public OCP API for MIME type JS regeneration. This is unavoidable and shared
-            // by all NC apps that register custom MIME types (Keeweb, Mind Map, etc.).
-            $updateJS = new \OC\Core\Command\Maintenance\Mimetype\UpdateJS($this->mimeTypeDetector);
-            $mime = new \OCA\Drawio\Migration\RegisterMimeType($this->mimeTypeLoader, $updateJS);
-            $output = new class($this->logger, $this->appName) implements \OCP\Migration\IOutput {
-                private $logger;
-                private $appName;
-                public function __construct($logger, $appName) { $this->logger = $logger; $this->appName = $appName; }
-                public function info($message) { $this->logger->info($message, ['app' => $this->appName]); }
-                public function warning($message) { $this->logger->warning($message, ['app' => $this->appName]); }
-                public function startProgress(int $max = 0, string $description = ''): void {}
-                public function advance(int $step = 1, string $description = ''): void {}
-                public function finishProgress(): void {}
-            };
-            $mime->run($output);
+            if ($registered == false) {
+                $mimeTypeLoader = \OC::$server->getMimeTypeLoader();
+                $updaetJS = new \OC\Core\Command\Maintenance\Mimetype\UpdateJS(\OC::$server->getMimeTypeDetector());
+                $mime = new \OCA\Drawio\Migration\RegisterMimeType($mimeTypeLoader, $updaetJS);
+                $output = new \OC\Migration\SimpleOutput(\OC::$server->get(\Psr\Log\LoggerInterface::class), $this->appName);
+                $mime->run($output);
+            }
         }
 
         return [
@@ -142,7 +122,6 @@ class SettingsController extends Controller
             "drawioDarkMode" =>$this->config->GetDarkMode(),
             "drawioPreviews" =>$this->config->GetPreviews(),
             "drawioConfig" =>$this->config->GetDrawioConfig(),
-            "drawioWhiteboards" =>$this->config->GetWhiteboards(),
         ];
     }
 

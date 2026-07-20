@@ -34,7 +34,6 @@ $(function () {
         var f_libraries = $('#drawioLibraries option:selected').val();
         var f_darkMode = $('#darkMode option:selected').val();
         var f_previews = $('#drawioPreviews option:selected').val();
-        var f_whiteboards = $('#drawioWhiteboards option:selected').val();
         var f_drawioConfig = $('#drawioConfig').val().trim();
 
         if (f_drawioConfig)
@@ -62,7 +61,6 @@ $(function () {
             libraries: f_libraries,
             darkMode: f_darkMode,
             previews: f_previews,
-            whiteboards: f_whiteboards,
             drawioConfig: f_drawioConfig
         };
 

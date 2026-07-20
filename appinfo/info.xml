@@ -3,22 +3,9 @@
 	  xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
     <id>drawio</id>
     <name>Draw.io</name>
-    <summary>Create and edit diagrams and whiteboards with draw.io</summary>
-    <description><![CDATA[Integrates the draw.io (diagrams.net) editor into Nextcloud, letting users create and edit diagrams and whiteboards directly from the Files app.
-
-**Key features:**
-
-- **Real-time collaboration** — multiple users can edit the same diagram simultaneously (requires Autosave and the official diagrams.net server)
-- **Whiteboards** — freeform .dwb whiteboard files alongside traditional .drawio diagrams
-- **Dark mode** — automatic or manual dark theme support
-- **Diagram previews** — PNG thumbnails shown in the Nextcloud file list
-- **Public sharing** — edit or view diagrams via Nextcloud public share links
-- **File versioning** — access previous diagram revisions through Nextcloud's version history
-- **Self-hosting** — optionally use your own draw.io server instead of the official one
-- **Offline mode** — work without an internet connection using a bundled draw.io instance
-- **Multilingual** — translated into 99 languages
-- **Admin controls** — configure theme, language, autosave, libraries, and more from the admin settings panel]]></description>
-    <version>4.1.2</version>
+    <summary>Draw.io integration app</summary>
+    <description><![CDATA[Integrates draw.io diagrams editor with Nextcloud]]></description>
+    <version>4.1.4</version>
     <licence>agpl</licence>
     <author>draw.io Ltd</author>
     <namespace>Drawio</namespace>
@@ -28,13 +15,12 @@
     <category>files</category>
     <category>integration</category>
     <category>tools</category>
-    <category>office</category>
     <website>https://github.com/jgraph/drawio-nextcloud</website>
     <bugs>https://github.com/jgraph/drawio-nextcloud/issues</bugs>
     <repository type="git">https://github.com/jgraph/drawio-nextcloud.git</repository>
     <screenshot small-thumbnail="https://raw.githubusercontent.com/jgraph/drawio-nextcloud/release/screenshots/drawio_integration_sm.png">https://raw.githubusercontent.com/jgraph/drawio-nextcloud/release/screenshots/drawio_integration.png</screenshot>
     <dependencies>
-        <nextcloud min-version="32" max-version="33"/>
+        <nextcloud min-version="31" max-version="32"/>
     </dependencies>
     <settings>
         <admin>OCA\Drawio\Settings\Admin</admin>

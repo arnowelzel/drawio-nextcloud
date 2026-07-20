@@ -11,7 +11,6 @@ OC.L10N.register(
     "Could not write to file." : "Tidak dapat menulis pada berkas.",
     "Insufficient permissions" : "Izin tidak cukup",
     "Saving..." : "Menyimpan...",
-    "Auto" : "Otomatis",
     "Dark" : "Gelap",
     "Yes" : "Ya",
     "No" : "Tidak",

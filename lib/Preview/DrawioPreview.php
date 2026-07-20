@@ -2,20 +2,20 @@
 
 namespace OCA\Drawio\Preview;
 
-use OCP\Preview\IProviderV2;
+use OC\Files\View;
+use OC\Preview\Provider;
 
-use OCP\Files\File;
+use OCP\AppFramework\QueryException;
 use OCP\Files\FileInfo;
 use OCP\Files\IAppData;
 use OCP\Files\NotFoundException;
-use OCP\IImage;
 use OCP\Image;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
 use OCA\Drawio\AppConfig;
 
-class DrawioPreview implements IProviderV2
+class DrawioPreview extends Provider
 {
     protected $appConfig;
     protected $logger;
@@ -33,12 +33,12 @@ class DrawioPreview implements IProviderV2
         "application/x-drawio-wb"
     ];
 
-    public function __construct(LoggerInterface $logger, IAppData $appData, AppConfig $appConfig)
+    public function __construct(LoggerInterface $logger, IAppData $appData)
     {
         $this->logger = $logger;
         $this->appData = $appData;
         $this->appName = 'drawio';
-        $this->appConfig = $appConfig;
+        $this->appConfig = new AppConfig($this->appName);
     }
 
     /**
@@ -70,12 +70,12 @@ class DrawioPreview implements IProviderV2
             $prevFile->getMtime() >= $file->getMtime();
     }
 
-    public function getThumbnail(File $file, int $maxX, int $maxY): ?IImage
+    public function getThumbnail($path, $maxX, $maxY, $scalingup, $view)
     {
-        $thumbnail = $this->getPreviewFile($file->getId());
+        $thumbnail = $this->getPreviewFile($view->getFileInfo($path)->getId());
 
         if ($this->appConfig->GetPreviews() === 'no' || $thumbnail === false) {
-            return null;
+            return false;
         }
 
         $image = new Image();
@@ -85,13 +85,13 @@ class DrawioPreview implements IProviderV2
             $image->scaleDownToFit($maxX, $maxY);
             return $image;
         }
-
-        return null;
+        
+        return false;
     }
 
     private function getPreviewFile($fileId)
     {
-        try
+        try 
         {
             return $this->appData->getFolder('previews')->getFile($fileId . '.png');
         }

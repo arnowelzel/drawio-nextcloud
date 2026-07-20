@@ -17,6 +17,20 @@ import '@nextcloud/dialogs/style.css';
 
 (function (OCA) {
 
+    // ADD SUPPORT TO IE
+    if (!String.prototype.includes) {
+        String.prototype.includes = function(search, start) {
+            if (typeof start !== 'number') {
+                start = 0;
+            }
+            if (start + search.length > this.length) {
+                return false;
+            } else {
+                return this.indexOf(search, start) !== -1;
+            }
+        };
+    }
+
     OCA.DrawIO = OCA.DrawIO || {}
     
     if (!OCA.DrawIO.AppName) 
@@ -166,19 +180,10 @@ import '@nextcloud/dialogs/style.css';
 
             if (filePath)
             {
-                var attachmentMatch = filePath.match(/\/\.attachments\.(\d+)\//);
-                if (attachmentMatch) {
-                    // File is a Text/Collectives document attachment — redirect to parent document
-                    url = generateUrl('/apps/files/files/{fileId}?dir={dir}&openfile=true', {
-                        dir: filePath.substring(0, filePath.lastIndexOf('/.attachments.')),
-                        fileId: attachmentMatch[1],
-                    });
-                } else {
-                    url = generateUrl('/apps/files/?dir={currentDirectory}', {
-                        currentDirectory: filePath.substring(0, filePath.lastIndexOf('/')),
-                        fileId: data.id
-                    });
-                }
+                url = generateUrl('/apps/files/?dir={currentDirectory}', {
+                    currentDirectory: filePath.substring(0, filePath.lastIndexOf('/')),
+                    fileId: data.id
+                });
             }
             else // ShareToken case
             {

@@ -1,71 +1,57 @@
-# ![](screenshots/icon.png) Draw.io integration for Nextcloud
+# ![](screenshots/icon.png) Nextcloud draw.io integration app
 
-[![GitHub release](https://img.shields.io/github/v/release/jgraph/drawio-nextcloud)](https://github.com/jgraph/drawio-nextcloud/releases)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Nextcloud](https://img.shields.io/badge/Nextcloud-32+-0082c9)](https://apps.nextcloud.com/apps/drawio)
+This app allows users to create and edit diagrams in [Nextcloud](https://nextcloud.com) using [draw.io](https://app.diagrams.net). Note that draw.io is NOT open source software.
 
-Create and edit [draw.io](https://app.diagrams.net) diagrams and whiteboards directly within [Nextcloud](https://nextcloud.com). Note that draw.io is NOT open source software.
+App Store link: https://apps.nextcloud.com/apps/drawio
 
-**[Install from the Nextcloud App Store](https://apps.nextcloud.com/apps/drawio)**
+Once installed, you will see an option to create a Draw.io diagram/whiteboard from the 'create file' menu.  Note: this app does not produce an app icon.
+
+![](screenshots/drawio_add.png)
 
 ![](screenshots/drawio_integration.png)
 
-## Features
 
-- **Diagrams & Whiteboards** — create `.drawio` diagrams and `.dwb` whiteboards from the "New file" menu
-- **Real-time collaboration** — multiple users can edit the same diagram simultaneously
-- **Dark mode** — automatic or manual dark theme support
-- **Diagram previews** — PNG thumbnails displayed in the Nextcloud file list
-- **Public sharing** — view or edit diagrams via Nextcloud share links, including password-protected links
-- **File versioning** — access and restore previous diagram revisions
-- **Self-hosting** — use your own draw.io server instead of the official one
-- **Offline mode** — work without an internet connection
-- **Multilingual** — translated into 99 languages
-- **Admin controls** — configure theme, language, autosave, custom libraries, and more
+## Info ##
+- Requires [Nextcloud](https://nextcloud.com) >=20.0.0
+- Version 20.8.6+ of draw.io is required.
+- Real-time collaboration only works with the official online version of draw.io (https://embed.diagrams.net) and Autosave enabled in draw.io settings (/index.php/settings/admin/drawio).
+- Multi language support (l10n)
+- Inspired by the old Draw.io Integration and OnlyOffice
+- Tested with Chrome 58-96 and Firefox 53-89
+- Tested with PHP 5.6/7.1/7.3/8.0/8.1
+- Draw.io Integration tested with NextCloud 20.0.0 / 21.0.0 / 22.0.0 / 23.0.0 / 24.0.1 / v25.0.1 / v26.0.0 / v27.0.0
+  
+## Download ##
 
-## Requirements
+[Our Github releases page](https://github.com/jgraph/drawio-nextcloud/releases)
 
-- [Nextcloud](https://nextcloud.com) >= 32
-- [draw.io](https://github.com/jgraph/docker-drawio) >= 20.8.6 (if self-hosting)
+## Changelog ##
 
-## Installation
+[Changelog](https://github.com/jgraph/drawio-nextcloud/blob/release/CHANGELOG.md)
 
-1. Copy the `drawio` directory to your Nextcloud server's `/apps/` directory (or install from the [App Store](https://apps.nextcloud.com/apps/drawio))
-2. Go to **Apps** > **+ Apps** > **Not Enabled** and enable the **Draw.io** application
-3. Go to **Admin settings** > **Draw.io** and click **Save** to register MIME types
+## Installation ##
+1. Copy Nextcloud draw.io integration app ("drawio" directory) to your Nextcloud server into the /apps/ directory
+2. Go to "Apps" > "+ Apps" > "Not Enabled" and _Enable_ the **Draw.io** application
+3. Go to "Admin settings > Draw.io" ( /index.php/settings/admin/drawio ) and click the "Save" button to register MIME types.
 
-## Real-time Collaboration
+## Real-time collaboration ##
 
-Real-time collaboration requires **Autosave enabled** and the official diagrams.net server (`https://embed.diagrams.net`). Self-hosted draw.io servers do not support real-time collaboration.
+Realtime collaboration is only possible with **Autosave enabled** and using the official diagrams.net server (https://embed.diagrams.net). Self hosted servers won't work.
 
-## Configuration
+## Known Issues ##
+- If you're experiencing problems while updating your Nextcloud intance, try to disable/delete draw.io integration app (/apps/drawio/) and then install/copy it again after the NC update is completed.
+- Clear PHP cache after updating the app if you have undefined method/classes errors. For example, if you're using PHP-FPM, you can restart the service `service php7.4-fpm restart`.
+- Integrity check of Nextcloud core fails as we add our new MIME types and icons. This is expected and safe to ignore ([issue #26](https://github.com/jgraph/drawio-nextcloud/issues/26)).
 
-Go to **Admin settings** > **Draw.io** to configure:
+## Configuration ##
+Go to Admin page and change the settings you want:
 
 ![](screenshots/drawio_admin.png)
 
-Available settings: draw.io server URL, theme, dark mode, language, autosave, custom libraries, offline mode, diagram previews, and editor configuration JSON.
+Click "Save" when you're done.
 
-If you would like to self-host draw.io, see [docker-drawio](https://github.com/jgraph/docker-drawio) (requires version 20.8.6+).
+If you would like to self-host draw.io, you might want to consider https://github.com/jgraph/docker-drawio (requires version 20.8.6+).
 
-## Known Issues
-
-- If you experience problems while updating Nextcloud, try disabling/removing the draw.io app (`/apps/drawio/`) and reinstalling it after the update completes.
-- Clear the PHP cache after updating the app if you get undefined method/class errors. For PHP-FPM: `service php-fpm restart`.
-- The Nextcloud integrity check may report a failure because the app registers custom MIME types and icons. This is expected and safe to ignore ([#26](https://github.com/jgraph/drawio-nextcloud/issues/26)).
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for the full release history.
-
-## Support and SOC 2
+## Support and SOC 2 ##
 
 This repo is not covered by the JGraph SOC 2 process. We do not provide commercial services or support for this app.
-
-## License
-
-AGPL-3.0 — see [LICENSE](LICENSE).
