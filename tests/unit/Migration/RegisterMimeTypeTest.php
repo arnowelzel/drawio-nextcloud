@@ -1,7 +1,4 @@
 <?php
-
-declare(strict_types=1);
-
 namespace OCA\Drawio\Tests\Unit\Migration;
 
 use OCA\Drawio\Migration\RegisterMimeType;
