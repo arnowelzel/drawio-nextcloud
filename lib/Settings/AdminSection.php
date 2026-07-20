@@ -30,6 +30,6 @@ class AdminSection implements IIconSection {
 
 	public function getIcon(): string
     {
-		return $this->url->imagePath('drawio', 'app.svg');
+		return $this->url->imagePath('drawio', 'app_dark.svg');
 	}
 }
