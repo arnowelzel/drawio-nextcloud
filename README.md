@@ -4,13 +4,21 @@
 
 This Nextcloud app integrates the [draw.io](https://app.diagrams.net) diagram editor.
 
-_Note: Due to the transfer of the ownership and maintenance of the app from JGraph Ltd to
-Arno Welzel in June 2026, older versions got removed in the Nextcloud App store, since
-the private key and signature for the app had to be renewed. As of 2026-06-19,
-Nextcloud 32 is the oldest version which is still supported. Also see
-[Maintenance and Release Schedule](https://github.com/nextcloud/server/wiki/Maintenance-and-Release-Schedule)
-for Nextcloud._
-
 ## License
 
 AGPL-3.0 — see [LICENSE](LICENSE).
+
+## Contributing
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) and [DEV.md](DEV.md) if you want to contribute.
+
+## New maintainer after version 4.2.4
+
+The app was originally maintained by Pawel Rojek and Ian Reinhart Geiser and later
+by JGraph Ltd..
+
+Since JGraph Ltd. didn't continue the support, it was handed over to Arno Welzel
+as the new maintainer in June 2026. Older versions got removed in the Nextcloud
+App store, since the private key and signature for the app had to be renewed.
+As of 2026-06-19, Nextcloud 32 is the oldest version which is still supported.
+Also see [Maintenance and Release Schedule](https://github.com/nextcloud/server/wiki/Maintenance).
