@@ -46,7 +46,7 @@ class DrawioReferenceProvider extends ADiscoverableReferenceProvider implements 
     public function getIconUrl(): string
     {
         return $this->urlGenerator->getAbsoluteURL(
-            $this->urlGenerator->imagePath('drawio', 'app.svg')
+            $this->urlGenerator->imagePath('drawio', 'app_dark.svg')
         );
     }
 

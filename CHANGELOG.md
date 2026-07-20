@@ -1,5 +1,9 @@
 # Change Log
 
+## 4.3.4
+
+- Fix app icon to use the correct color scheme for light/dark theme
+
 ## 4.3.3
 
 - Reverting mitigation to fix MIME type errors when upgrading from version 4.2.5 or older

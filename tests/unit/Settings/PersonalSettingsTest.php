@@ -1,19 +1,19 @@
 <?php
 namespace OCA\Drawio\Tests\Unit\Settings;
 
-use OCA\Drawio\Controller\AdminSettingsController;
-use OCA\Drawio\Settings\AdminSettings;
+use OCA\Drawio\Controller\PersonalSettingsController;
+use OCA\Drawio\Settings\PersonalSettings;
 use OCP\AppFramework\Http\TemplateResponse;
 use PHPUnit\Framework\TestCase;
 
-final class AdminSettingsTest extends TestCase {
-
-    private function createAdminSettings(?AdminSettingsController $controller = null): AdminSettings {
-        return new AdminSettings($controller ?? $this->createMock(AdminSettingsController::class));
+final class PersonalSettingsTest extends TestCase
+{
+    private function createPersonalSettings(?PersonalSettingsController $controller = null): PersonalSettings {
+        return new PersonalSettings($controller ?? $this->createMock(PersonalSettingsController::class));
     }
 
     public function testSectionAndPriority(): void {
-        $admin = $this->createAdminSettings();
+        $admin = $this->createPersonalSettings();
 
         $this->assertSame('drawio', $admin->getSection());
         $this->assertSame(60, $admin->getPriority());
@@ -23,15 +23,15 @@ final class AdminSettingsTest extends TestCase {
     public function testDelegationAllowsDrawioAppConfig(): void {
         $this->assertSame(
             ['drawio' => ['/drawio.*/']],
-            $this->createAdminSettings()->getAuthorizedAppConfig()
+            $this->createPersonalSettings()->getAuthorizedAppConfig()
         );
     }
 
     public function testGetFormDelegatesToSettingsController(): void {
         $form = new TemplateResponse('drawio', 'settings', [], TemplateResponse::RENDER_AS_BLANK);
-        $controller = $this->createMock(AdminSettingsController::class);
+        $controller = $this->createMock(PersonalSettingsController::class);
         $controller->expects($this->once())->method('index')->willReturn($form);
 
-        $this->assertSame($form, $this->createAdminSettings($controller)->getForm());
+        $this->assertSame($form, $this->createPersonalSettings($controller)->getForm());
     }
 }
