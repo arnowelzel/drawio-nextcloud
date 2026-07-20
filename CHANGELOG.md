@@ -1,5 +1,10 @@
 # Change Log
 
+## 4.3.2
+
+- Additional mitigation to fix MIME type errors when upgrading from version 4.2.5 or older (thanks to solracfs)
+- Updated app icon to fix visibility issues in the app list
+
 ## 4.3.1
 
 - Refactored code to remove deprecations (thanks to solracfs)
@@ -9,7 +14,7 @@
 ## 4.3.0
 
 - Refactored MIME type registration to avoid changing core files of Nextcloud
-- Filetype icons will no longer be copied to Nextcloud core folders to avoid integrity check errors.
+- Filetype icons will no longer be copied to Nextcloud core folders to avoid integrity check errors
 
 ## 4.2.5
 
