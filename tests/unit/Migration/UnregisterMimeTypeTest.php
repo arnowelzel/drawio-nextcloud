@@ -12,40 +12,22 @@ use PHPUnit\Framework\TestCase;
 
 final class UnregisterMimeTypeTest extends TestCase {
 
-    private string $root;
     private string $configDir;
-    private string $coreIconDir;
     private IMimeTypeLoader&MockObject $mimeTypeLoader;
 
     protected function setUp(): void {
-        $this->root = sys_get_temp_dir() . '/drawio-test-' . uniqid();
-        $this->configDir = $this->root . '/config/';
-        $this->coreIconDir = $this->root . '/core/img/filetypes/';
-        mkdir($this->configDir, 0777, true);
-        mkdir($this->coreIconDir, 0777, true);
-
+        $this->configDir = sys_get_temp_dir() . '/drawio-test-' . uniqid() . '/';
+        mkdir($this->configDir);
         \OC::$configDir = $this->configDir;
-        \OC::$SERVERROOT = $this->root;
 
         $this->mimeTypeLoader = $this->createMock(IMimeTypeLoader::class);
     }
 
     protected function tearDown(): void {
-        foreach (glob($this->configDir . '*') ?: [] as $file) {
-            unlink($file);
+        foreach (['mimetypemapping.json', 'mimetypealiases.json'] as $file) {
+            @unlink($this->configDir . $file);
         }
-        foreach (glob($this->coreIconDir . '*') ?: [] as $file) {
-            unlink($file);
-        }
-        foreach ([$this->configDir, $this->root . '/core/img/filetypes', $this->root . '/core/img', $this->root . '/core', $this->root] as $dir) {
-            @rmdir($dir);
-        }
-    }
-
-    private function runStep(): void {
-        $step = new UnregisterMimeType($this->mimeTypeLoader);
-        $this->assertSame('Unregister MIME type for Diagramming', $step->getName());
-        $step->run($this->createMock(IOutput::class));
+        @rmdir($this->configDir);
     }
 
     public function testRunRemovesOnlyDrawioEntries(): void {
@@ -68,32 +50,20 @@ final class UnregisterMimeTypeTest extends TestCase {
                 return 1;
             });
 
-        $this->runStep();
+        $step = new UnregisterMimeType($this->mimeTypeLoader);
+        $this->assertSame('Unregister MIME type for Diagramming', $step->getName());
+        $step->run($this->createMock(IOutput::class));
 
         $this->assertSame(['drawio' => 3, 'dwb' => 3], $filecacheUpdates);
 
-        $mapping = json_decode((string)file_get_contents($this->configDir . 'mimetypemapping.json'), true);
+        $mapping = json_decode(file_get_contents($this->configDir . 'mimetypemapping.json'), true);
         $this->assertArrayNotHasKey('drawio', $mapping);
         $this->assertArrayNotHasKey('dwb', $mapping);
         $this->assertSame(['application/x-mind'], $mapping['mind']);
 
-        $aliases = json_decode((string)file_get_contents($this->configDir . 'mimetypealiases.json'), true);
+        $aliases = json_decode(file_get_contents($this->configDir . 'mimetypealiases.json'), true);
         $this->assertArrayNotHasKey('application/x-drawio', $aliases);
         $this->assertArrayNotHasKey('application/x-drawio-wb', $aliases);
         $this->assertSame('mind', $aliases['application/x-mind']);
-    }
-
-    public function testRunRemovesIconsFromTheNextcloudCore(): void {
-        file_put_contents($this->coreIconDir . 'drawio.svg', '<svg/>');
-        file_put_contents($this->coreIconDir . 'dwb.svg', '<svg/>');
-        file_put_contents($this->coreIconDir . 'text.svg', '<svg/>');
-        $this->mimeTypeLoader->method('getId')->willReturn(3);
-        $this->mimeTypeLoader->method('updateFilecache')->willReturn(1);
-
-        $this->runStep();
-
-        $this->assertFileDoesNotExist($this->coreIconDir . 'drawio.svg');
-        $this->assertFileDoesNotExist($this->coreIconDir . 'dwb.svg');
-        $this->assertFileExists($this->coreIconDir . 'text.svg');
     }
 }

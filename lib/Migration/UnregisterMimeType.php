@@ -5,42 +5,55 @@ use OCP\Migration\IOutput;
 
 class UnregisterMimeType extends MimeTypeMigration
 {
-    public function getName(): string
+    public function getName()
     {
         return 'Unregister MIME type for Diagramming';
     }
 
-    private function unregisterForExistingFiles(): void
+    private function unregisterForExistingFiles()
     {
         $mimeTypeId = $this->mimeTypeLoader->getId('application/octet-stream');
         $this->mimeTypeLoader->updateFilecache('drawio', $mimeTypeId);
         $this->mimeTypeLoader->updateFilecache('dwb', $mimeTypeId);
     }
 
-    private function unregisterForNewFiles(): void
+    private function unregisterForNewFiles()
     {
-        $this->removeFromFile(\OC::$configDir . self::CUSTOM_MIMETYPEMAPPING, [
-            'drawio' => ['application/x-drawio'],
-            'dwb' => ['application/x-drawio-wb']
-        ]);
+        $configDir = \OC::$configDir;
+        $mimetypealiasesFile = $configDir . self::CUSTOM_MIMETYPEALIASES;
+        $mimetypemappingFile = $configDir . self::CUSTOM_MIMETYPEMAPPING;
 
-        // Written by app versions up to 4.2.x
-        $this->removeFromFile(\OC::$configDir . self::CUSTOM_MIMETYPEALIASES, self::LEGACY_ALIASES);
+        $this->removeFromFile($mimetypealiasesFile, [
+            'application/x-drawio' => 'drawio',
+            'application/x-drawio-wb' => 'dwb'
+        ]);
+        $this->removeFromFile($mimetypemappingFile, [
+            'drawio' => ['application/x-drawio'],
+            'dwb' => ['application/x-drawio-wb']]);
     }
 
-    public function run(IOutput $output): void
+    public function run(IOutput $output)
     {
         $output->info('Unregistering the mimetype...');
 
-        // Reset existing files to the generic MIME type
+        // Register the mime type for existing files
         $this->unregisterForExistingFiles();
 
-        // Remove the MIME type registration for new files
+        // Register the mime type for new files
         $this->unregisterForNewFiles();
 
-        // Remove the icons older versions copied into the Nextcloud core
-        $this->removeLegacyCoreIcons($output);
-
         $output->info('The mimetype was successfully unregistered.');
+    }
+
+    private function removeFromFile(string $filename, array $data) {
+        $obj = [];
+        if (file_exists($filename)) {
+            $content = file_get_contents($filename);
+            $obj = json_decode($content, true);
+        }
+        foreach ($data as $key => $value) {
+            unset($obj[$key]);
+        }
+        file_put_contents($filename, json_encode($obj,  JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
     }
 }
