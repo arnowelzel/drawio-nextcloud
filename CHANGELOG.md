@@ -1,5 +1,9 @@
 # Change Log
 
+## 4.3.3
+
+- Reverting mitigation to fix MIME type errors when upgrading from version 4.2.5 or older
+
 ## 4.3.2
 
 - Additional mitigation to fix MIME type errors when upgrading from version 4.2.5 or older (thanks to solracfs)
