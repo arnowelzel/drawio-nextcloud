@@ -11,7 +11,7 @@ namespace OCA\Drawio\Tests\E2e;
 final class SettingsAndTemplatesE2eTest extends E2ETestCase {
 
     private static function postSettings(string $whiteboards): array {
-        $response = self::apiClient()->post('/index.php/apps/drawio/ajax/settings', [
+        $response = self::apiClient()->post('/index.php/apps/drawio/ajax/adminSettings', [
             'form_params' => [
                 'drawioUrl' => '',
                 'offlineMode' => 'no',
