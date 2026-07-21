@@ -42,7 +42,10 @@ class PersonalConfig {
 
     public function GetTheme(): string
     {
-        $val = $this->userConfig->getValueString($this->UID, Application::APP_ID, $this->_theme);
+        $val = '';
+        if ($this->UID !== null) {
+            $val = $this->userConfig->getValueString($this->UID, Application::APP_ID, $this->_theme);
+        }
         if (empty($val)) $val = $this->predefTheme;
         return $val;
     }
@@ -55,7 +58,10 @@ class PersonalConfig {
 
     public function GetLang(): string
     {
-        $val = $this->userConfig->getValueString($this->UID, Application::APP_ID, $this->_lang);
+        $val = '';
+        if ($this->UID !== null) {
+            $val = $this->userConfig->getValueString($this->UID, Application::APP_ID, $this->_lang);
+        }
         if (empty($val)) $val = $this->predefLang;
         return $val;
     }
@@ -68,7 +74,10 @@ class PersonalConfig {
     
     public function GetDarkMode(): string
     {
-        $val = $this->userConfig->getValueString($this->UID, Application::APP_ID, $this->_darkmode);
+        $val = '';
+        if ($this->UID !== null) {
+            $val = $this->userConfig->getValueString($this->UID, Application::APP_ID, $this->_darkmode);
+        }
         if (empty($val))
         {
             if ($this->GetTheme() == "dark")
