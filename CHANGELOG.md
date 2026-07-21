@@ -1,5 +1,9 @@
 # Change Log
 
+## 4.3.5
+
+- Fix server error when accessing diagrams shared as public links
+
 ## 4.3.4
 
 - Fix app icon to use the correct color scheme for light/dark theme
