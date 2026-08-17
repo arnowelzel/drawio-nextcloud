@@ -1,5 +1,9 @@
 # Change Log
 
+## 4.3.8
+
+- Refactoring to avoid `jsresourceloader` errors
+
 ## 4.3.7
 
 - Fix internal package version
