@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in the draw.io Nextcloud integration, please report it responsibly by opening a [private security advisory](https://github.com/jgraph/drawio-nextcloud/security/advisories/new) on GitHub.
+If you discover a security vulnerability in the draw.io Nextcloud integration, please report it responsibly by opening a [private security advisory](https://github.com/arnowelzel/drawio-nextcloud/security/advisories/new) on GitHub.
 
 Please do **not** open a public issue for security vulnerabilities.
 
