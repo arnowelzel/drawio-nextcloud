@@ -31,7 +31,7 @@
     "devDependencies": {
         "css-loader": "^6.7.3",
         "sass": "^1.69.4",
-        "sass-loader": "^13.3.2",
+        "sass-loader": "^17.0.0",
         "style-loader": "^3.3.3",
         "vue-loader": "^15.11.1",
         "vue-template-compiler": "^2.7.16",
