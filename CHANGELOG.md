@@ -1,5 +1,9 @@
 # Change Log
 
+## 4.3.7
+
+- Fix internal package version
+
 ## 4.3.6
 
 - Fix security issue which allowed unauthorized file access
