@@ -34,7 +34,7 @@ This starts a local Nextcloud instance at http://localhost:8088 with the draw.io
 
 ## Translations
 
-Translation files are in `l10n/`. To add or update a translation, edit the corresponding `l10n/{lang}.js` and `l10n/{lang}.json` files. Run `npm run extract-strings` to regenerate the source string list.
+Translation files are in `l10n/`. To add or update a translation, edit the corresponding `l10n/{lang}.json` files. Run `npm run extract-strings` to regenerate the source string list.
 
 ## License
 
