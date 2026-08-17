@@ -38,5 +38,10 @@ module.exports = {
         new webpack.ProvidePlugin({
             process: 'process/browser.js',
         }),
-    ]
+    ],
+    performance: {
+        hints: false,
+        maxEntrypointSize: 512000,
+        maxAssetSize: 512000
+    }
 }
