@@ -1,5 +1,11 @@
 # Change Log
 
+## 4.3.6
+
+- Fix security issue which allowed unauthorized file access
+- Updated German translation
+- Updated Node dependencies
+
 ## 4.3.5
 
 - Fix server error when accessing diagrams shared as public links
