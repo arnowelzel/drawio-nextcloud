@@ -175,7 +175,7 @@ class EditorController extends Controller
                         'xml' => $fileContents,
                         'id' => $fileId,
                         'size' => $file->getSize(),
-                        'writeable' => $file->isUpdateable(),
+                        'writeable' => $writeable,
                         'mime' => $file->getMimeType(),
                         'path' => $relativePath,
                         'name' => $file->getName(),
@@ -554,7 +554,15 @@ class EditorController extends Controller
 
     private function getFileById($fileId): \OCP\Files\Node
     {
-        $files = $this->root->getById($fileId);
+        $user = $this->userSession->getUser();
+
+        if ($user === null) {
+            throw new NotFoundException();
+        }
+
+        // getUserFolder(), never the root folder: IRootFolder::getById() spans every
+        // user's storage and hands back a node carrying the OWNER's permissions.
+        $files = $this->root->getUserFolder($user->getUID())->getById($fileId);
 
         if (empty($files)) {
             throw new NotFoundException();
@@ -577,16 +585,7 @@ class EditorController extends Controller
         $baseFolder = null;
         $share = null;
 
-        if (!empty($fileId) && $this->userSession->isLoggedIn()) {
-            $file = $this->getFileById($fileId);
-            $uid = $this->userSession->getUser()->getUID();
-            $baseFolder = $this->root->getUserFolder($uid);
-            if (!empty($shareToken))
-            {
-                $share = $this->shareManager->getShareByToken($shareToken);  // Have fileId and shareToken, and be logged in, get $share
-            }
-        }
-        else if (!empty($shareToken))
+        if (!empty($shareToken))
         {
             list ($file, $share) = $this->getNodeByToken($shareToken);
 
@@ -599,6 +598,23 @@ class EditorController extends Controller
                     throw new NotFoundException();
                 }
             }
+            else if (!empty($fileId) && (int)$fileId !== $file->getId())
+            {
+                // A file share covers exactly one node. Rather than silently serving
+                // that node, refuse when the caller asked for a different one.
+                throw new NotFoundException();
+            }
+
+            if ($this->userSession->isLoggedIn())
+            {
+                $baseFolder = $this->root->getUserFolder($this->userSession->getUser()->getUID());
+            }
+        }
+        else if (!empty($fileId) && $this->userSession->isLoggedIn())
+        {
+            $file = $this->getFileById($fileId);
+            $uid = $this->userSession->getUser()->getUID();
+            $baseFolder = $this->root->getUserFolder($uid);
         }
         else
         {
@@ -639,9 +655,13 @@ class EditorController extends Controller
         $isCreatable = false;
         $share = false;
 
-        if (!empty($dirId) && $this->userSession->isLoggedIn())
+        if (!empty($shareToken))
         {
-            $nodes = $this->root->getById($dirId);
+            list ($dir, $share) = $this->getNodeByToken($shareToken);
+        }
+        else if (!empty($dirId) && $this->userSession->isLoggedIn())
+        {
+            $nodes = $this->root->getUserFolder($this->userSession->getUser()->getUID())->getById($dirId);
 
             if (empty($nodes))
             {
@@ -649,10 +669,6 @@ class EditorController extends Controller
             }
 
             $dir = $nodes[0];
-        }
-        else if (!empty($shareToken))
-        {
-            list ($dir, $share) = $this->getNodeByToken($shareToken);
         }
         else
         {
@@ -664,7 +680,7 @@ class EditorController extends Controller
             throw new NotFoundException();
         }
 
-        if (!empty($shareToken))
+        if ($share !== false && $share !== null)
         {
             $isCreatable = $this->checkPermissions($share, Constants::PERMISSION_CREATE);
         }
