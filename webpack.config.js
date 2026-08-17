@@ -9,7 +9,6 @@ module.exports = {
         'main': './src/main.js',
         'adminSettings': './src/adminSettings.js',
         'personalSettings': './src/personalSettings.js',
-        'drawio-reference': './src/reference.js'
     },
     output: {
         filename: '[name].js',
