@@ -17,7 +17,5 @@ class DrawioReferenceListener implements IEventListener {
         if (!$event instanceof RenderReferenceEvent) {
             return;
         }
-
-        Util::addScript(Application::APP_ID, 'drawio-reference');
     }
 }
