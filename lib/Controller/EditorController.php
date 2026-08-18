@@ -560,13 +560,9 @@ class EditorController extends Controller
             throw new NotFoundException();
         }
 
-        $userFolder = $this->root->getUserFolder($user->getUID());
-
-        if ($userFolder === null) {
-            throw new NotFoundException();
-        }
-
-        $files = $userFolder->getById($fileId);
+        // getUserFolder(), never the root folder: IRootFolder::getById() spans every
+        // user's storage and hands back a node carrying the OWNER's permissions.
+        $files = $this->root->getUserFolder($user->getUID())->getById($fileId);
 
         if (empty($files)) {
             throw new NotFoundException();
