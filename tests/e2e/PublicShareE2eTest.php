@@ -30,6 +30,12 @@ final class PublicShareE2eTest extends E2ETestCase {
     private static int $openFileId;
     private static string $openShareToken;
 
+    private static string $folderName;
+    private static int $subfolderId;
+    private static string $folderShareToken;
+    private static string $outsideFolderName;
+    private static int $outsideFolderId;
+
     public static function setUpBeforeClass(): void {
         parent::setUpBeforeClass();
 
@@ -45,16 +51,31 @@ final class PublicShareE2eTest extends E2ETestCase {
         self::$openFileId = self::davStat(self::$openFileName)['fileid'];
 
         self::$openShareToken = (string)self::createLinkShare(self::$openFileName)['token'];
+
+        self::$folderName = 'E2E-sharedir-' . uniqid();
+        self::davMkcol(self::$folderName);
+        self::davMkcol(self::$folderName . '/sub');
+        self::$subfolderId = self::davStat(self::$folderName . '/sub')['fileid'];
+
+        self::$outsideFolderName = 'E2E-outside-' . uniqid();
+        self::davMkcol(self::$outsideFolderName);
+        self::$outsideFolderId = self::davStat(self::$outsideFolderName)['fileid'];
+
+        self::$folderShareToken = (string)self::createLinkShare(self::$folderName, null, 5)['token']; // read + create
     }
 
     /**
      * @return array<string, mixed>
      */
-    private static function createLinkShare(string $path, ?string $password = null): array {
+    private static function createLinkShare(string $path, ?string $password = null, ?int $permissions = null): array {
         $share = ['path' => '/' . $path, 'shareType' => 3];
 
         if ($password !== null) {
             $share['password'] = $password;
+        }
+
+        if ($permissions !== null) {
+            $share['permissions'] = $permissions;
         }
 
         $response = self::apiClient()->post('/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json', [
@@ -293,5 +314,60 @@ final class PublicShareE2eTest extends E2ETestCase {
         $this->assertSame(200, $response->getStatusCode());
         $this->assertStringNotContainsString('core-public-share-auth', (string)$response->getBody(),
             'A link without a password must not show the password prompt');
+    }
+
+    // ---- file creation in an editable folder share ----
+
+    /**
+     * @return array{jar: CookieJar, token: string}
+     */
+    private function openFolderSharePage(): array {
+        $jar = new CookieJar();
+        $response = self::browserClient($jar)->get('/index.php/s/' . self::$folderShareToken);
+        $this->assertSame(200, $response->getStatusCode());
+
+        return ['jar' => $jar, 'token' => self::extractRequestToken((string)$response->getBody())];
+    }
+
+    private function createAnonymously(array $session, string $name, string $dirId): \Psr\Http\Message\ResponseInterface {
+        return self::browserClient($session['jar'])->post('/index.php/apps/drawio/ajax/new', [
+            'json' => ['name' => $name, 'dirId' => $dirId, 'shareToken' => self::$folderShareToken],
+            'headers' => ['requesttoken' => $session['token'], 'Accept' => 'application/json'],
+        ]);
+    }
+
+    /**
+     * Regression test: create() used to ignore dirId on the share-token path,
+     * silently creating the file in the share root and reporting the root as
+     * parentId.
+     */
+    public function testAnonymousCreateInSubfolderOfSharedFolderHonorsDirId(): void {
+        $session = $this->openFolderSharePage();
+        $name = 'E2E-created-' . uniqid() . '.drawio';
+
+        $response = $this->createAnonymously($session, $name, (string)self::$subfolderId);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $data = self::decodeJson((string)$response->getBody());
+        $this->assertArrayNotHasKey('error', $data, 'create failed: ' . json_encode($data));
+        $this->assertSame(self::$subfolderId, $data['parentId']);
+        $this->assertSame($data['id'], self::davStat(self::$folderName . '/sub/' . $name)['fileid'],
+            'The file must physically live in the requested subfolder');
+    }
+
+    public function testAnonymousCreateWithDirIdOutsideShareIsRejected(): void {
+        $session = $this->openFolderSharePage();
+        $name = 'E2E-escape-' . uniqid() . '.drawio';
+
+        $response = $this->createAnonymously($session, $name, (string)self::$outsideFolderId);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('The required folder was not found',
+            self::decodeJson((string)$response->getBody())['error'] ?? null);
+
+        $probe = self::apiClient()->request('PROPFIND',
+            '/remote.php/dav/files/' . self::$adminUser . '/' . self::$outsideFolderName . '/' . $name,
+            ['headers' => ['Depth' => '0']]);
+        $this->assertSame(404, $probe->getStatusCode(), 'No file may be created outside the share');
     }
 }
