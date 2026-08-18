@@ -1,6 +1,5 @@
 const path = require('path')
 const webpack = require('webpack')
-const { VueLoaderPlugin } = require('vue-loader')
 
 module.exports = {
     mode: 'production',
@@ -8,8 +7,7 @@ module.exports = {
         'editor': './src/editor.js',
         'main': './src/main.js',
         'adminSettings': './src/adminSettings.js',
-        'personalSettings': './src/personalSettings.js',
-        'drawio-reference': './src/reference.js'
+        'personalSettings': './src/personalSettings.js'
     },
     output: {
         filename: '[name].js',
@@ -32,13 +30,6 @@ module.exports = {
             },
         ]
     },
-    plugins: [
-        new VueLoaderPlugin(),
-        // fix "process is not defined" error:
-        new webpack.ProvidePlugin({
-            process: 'process/browser.js',
-        }),
-    ],
     performance: {
         hints: false,
         maxEntrypointSize: 512000,
