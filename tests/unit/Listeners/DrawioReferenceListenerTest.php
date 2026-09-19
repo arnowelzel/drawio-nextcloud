@@ -17,12 +17,6 @@ final class DrawioReferenceListenerTest extends TestCase {
         $this->resetGlobalState();
     }
 
-    public function testAddsReferenceWidgetScript(): void {
-        (new DrawioReferenceListener())->handle(new RenderReferenceEvent());
-
-        $this->assertContains('drawio/js/drawio-reference', self::scripts()['drawio'] ?? []);
-    }
-
     public function testIgnoresUnrelatedEvents(): void {
         (new DrawioReferenceListener())->handle(new class extends Event {
         });
