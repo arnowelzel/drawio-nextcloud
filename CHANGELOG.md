@@ -1,5 +1,9 @@
 # Change Log
 
+## 4.3.9
+
+- Update compatibility information for Nextcloud 35
+
 ## 4.3.8
 
 - Refactoring to avoid `jsresourceloader` errors
