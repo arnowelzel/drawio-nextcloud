@@ -15,7 +15,7 @@
 - Supports public share links (read-only and editable)
 - Offline mode for privacy-sensitive deployments
 - Configurable editor URL for self-hosted diagrams.net instances]]></description>
-    <version>4.3.8</version>
+    <version>4.3.9</version>
     <licence>agpl</licence>
     <author>Arno Welzel</author>
     <namespace>Drawio</namespace>
@@ -32,7 +32,7 @@
     <screenshot small-thumbnail="https://raw.githubusercontent.com/arnowelzel/drawio-nextcloud/refs/heads/main/screenshots/drawio_integration_sm.png">https://raw.githubusercontent.com/arnowelzel/drawio-nextcloud/refs/heads/main/screenshots/drawio_integration.png</screenshot>
     <dependencies>
         <php min-version="8.2" max-version="8.5"/>
-        <nextcloud min-version="33" max-version="34"/>
+        <nextcloud min-version="33" max-version="35"/>
     </dependencies>
     <repair-steps>
         <post-migration>
