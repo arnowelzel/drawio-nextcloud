@@ -35,7 +35,7 @@ final class AppInfoXmlTest extends TestCase {
         $dependencies = self::info()->dependencies;
 
         $this->assertSame('33', (string)$dependencies->nextcloud['min-version']);
-        $this->assertSame('34', (string)$dependencies->nextcloud['max-version']);
+        $this->assertSame('35', (string)$dependencies->nextcloud['max-version']);
         $this->assertSame('8.2', (string)$dependencies->php['min-version']);
     }
 
