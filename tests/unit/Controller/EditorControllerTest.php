@@ -573,6 +573,116 @@ final class EditorControllerTest extends TestCase {
         $this->assertSame("Can't create file", $result['error']);
     }
 
+    public function testCreateInSubfolderOfSharedFolderHonorsDirId(): void {
+        $this->userSession->method('isLoggedIn')->willReturn(false);
+
+        $subfolder = $this->createMock(Folder::class);
+        $file = $this->createFile(['id' => 98, 'name' => 'New.drawio']);
+        $file->method('getParent')->willReturn($subfolder);
+        $subfolder->method('getId')->willReturn(5);
+        $subfolder->method('getNonExistingName')->with('New.drawio')->willReturn('New.drawio');
+        $subfolder->expects($this->once())->method('newFile')->with('New.drawio', ' ')->willReturn($file);
+
+        $sharedFolder = $this->createMock(Folder::class);
+        $sharedFolder->method('getId')->willReturn(10);
+        $sharedFolder->method('getFirstNodeById')->with(5)->willReturn($subfolder);
+        $sharedFolder->expects($this->never())->method('newFile');
+
+        $share = $this->createShare($sharedFolder, Constants::PERMISSION_READ | Constants::PERMISSION_CREATE);
+        $this->shareManager->method('getShareByToken')->with('tok123')->willReturn($share);
+        $this->shareAuth->method('isAuthenticated')->with($share)->willReturn(true);
+
+        $result = $this->createController()->create('New.drawio', '5', 'tok123');
+
+        $this->assertSame(98, $result['id']);
+        $this->assertSame(5, $result['parentId']);
+    }
+
+    public function testCreateInShareRootWhenNoDirId(): void {
+        $this->userSession->method('isLoggedIn')->willReturn(false);
+
+        $sharedFolder = $this->createMock(Folder::class);
+        $file = $this->createFile(['id' => 98, 'name' => 'New.drawio']);
+        $file->method('getParent')->willReturn($sharedFolder);
+        $sharedFolder->method('getId')->willReturn(10);
+        $sharedFolder->method('getNonExistingName')->with('New.drawio')->willReturn('New.drawio');
+        $sharedFolder->expects($this->once())->method('newFile')->with('New.drawio', ' ')->willReturn($file);
+
+        $share = $this->createShare($sharedFolder, Constants::PERMISSION_READ | Constants::PERMISSION_CREATE);
+        $this->shareManager->method('getShareByToken')->with('tok123')->willReturn($share);
+        $this->shareAuth->method('isAuthenticated')->with($share)->willReturn(true);
+
+        $result = $this->createController()->create('New.drawio', '', 'tok123');
+
+        $this->assertSame(10, $result['parentId']);
+    }
+
+    public function testCreateWithShareRootDirIdCreatesInRoot(): void {
+        $this->userSession->method('isLoggedIn')->willReturn(false);
+
+        $sharedFolder = $this->createMock(Folder::class);
+        $file = $this->createFile(['id' => 98, 'name' => 'New.drawio']);
+        $file->method('getParent')->willReturn($sharedFolder);
+        $sharedFolder->method('getId')->willReturn(10);
+        $sharedFolder->expects($this->never())->method('getFirstNodeById');
+        $sharedFolder->method('getNonExistingName')->with('New.drawio')->willReturn('New.drawio');
+        $sharedFolder->expects($this->once())->method('newFile')->with('New.drawio', ' ')->willReturn($file);
+
+        $share = $this->createShare($sharedFolder, Constants::PERMISSION_READ | Constants::PERMISSION_CREATE);
+        $this->shareManager->method('getShareByToken')->with('tok123')->willReturn($share);
+        $this->shareAuth->method('isAuthenticated')->with($share)->willReturn(true);
+
+        $result = $this->createController()->create('New.drawio', '10', 'tok123');
+
+        $this->assertSame(10, $result['parentId']);
+    }
+
+    public function testCreateWithDirIdOutsideShareReturnsError(): void {
+        $this->userSession->method('isLoggedIn')->willReturn(false);
+
+        $sharedFolder = $this->createMock(Folder::class);
+        $sharedFolder->method('getId')->willReturn(10);
+        $sharedFolder->method('getFirstNodeById')->willReturn(null);
+        $sharedFolder->expects($this->never())->method('newFile');
+
+        $share = $this->createShare($sharedFolder, Constants::PERMISSION_READ | Constants::PERMISSION_CREATE);
+        $this->shareManager->method('getShareByToken')->willReturn($share);
+        $this->shareAuth->method('isAuthenticated')->willReturn(true);
+
+        $result = $this->createController()->create('New.drawio', '999', 'tok123');
+
+        $this->assertSame('The required folder was not found', $result['error']);
+    }
+
+    public function testCreateOnFileShareTokenReturnsError(): void {
+        $this->userSession->method('isLoggedIn')->willReturn(false);
+
+        $sharedFile = $this->createFile();
+        $share = $this->createShare($sharedFile, Constants::PERMISSION_READ | Constants::PERMISSION_CREATE);
+        $this->shareManager->method('getShareByToken')->willReturn($share);
+        $this->shareAuth->method('isAuthenticated')->willReturn(true);
+
+        $result = $this->createController()->create('New.drawio', '', 'tok123');
+
+        $this->assertSame('The required folder was not found', $result['error']);
+    }
+
+    public function testCreateWithoutCreatePermissionOnShareReturnsError(): void {
+        $this->userSession->method('isLoggedIn')->willReturn(false);
+
+        $sharedFolder = $this->createMock(Folder::class);
+        $sharedFolder->method('getId')->willReturn(10);
+        $sharedFolder->expects($this->never())->method('newFile');
+
+        $share = $this->createShare($sharedFolder, Constants::PERMISSION_READ);
+        $this->shareManager->method('getShareByToken')->willReturn($share);
+        $this->shareAuth->method('isAuthenticated')->willReturn(true);
+
+        $result = $this->createController()->create('New.drawio', '', 'tok123');
+
+        $this->assertSame("You don't have enough permission to create file", $result['error']);
+    }
+
     // ---- index ----
 
     public function testIndexRedirectsAnonymousUsersToLogin(): void {

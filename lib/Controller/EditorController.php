@@ -402,11 +402,14 @@ class EditorController extends Controller
     #[PublicPage]
     public function create(string $name, string $dirId, $shareToken): array
     {
-        list ($folder, $writeable) = $this->getDir($dirId, $shareToken);
-
-        if ($folder === NULL) {
+        try {
+            list ($folder, $writeable) = $this->getDir($dirId, $shareToken);
+        } catch (NotFoundException $e) {
             $this->logger->info("Folder for file creation was not found: " . $dirId, ["app" => $this->appName]);
             return ["error" => $this->trans->t("The required folder was not found")];
+        } catch (ForbiddenException $e) {
+            $this->logger->info("Folder for file creation without permission: " . $dirId, ["app" => $this->appName]);
+            return ["error" => $this->trans->t("You don't have enough permission to create file")];
         }
 
         if (!$writeable) {
@@ -662,6 +665,16 @@ class EditorController extends Controller
         if (!empty($shareToken))
         {
             list ($dir, $share) = $this->getNodeByToken($shareToken);
+
+            if (!empty($dirId) && $dir instanceof Folder && (int)$dirId !== $dir->getId()) // Subfolder of a shared folder case
+            {
+                $dir = $dir->getFirstNodeById((int)$dirId);
+
+                if ($dir === null)
+                {
+                    throw new NotFoundException();
+                }
+            }
         }
         else if (!empty($dirId) && $this->userSession->isLoggedIn())
         {
@@ -679,7 +692,7 @@ class EditorController extends Controller
             throw new BadRequestException(['fileId', 'shareToken']);
         }
 
-        if ($dir === null)
+        if (!($dir instanceof Folder))
         {
             throw new NotFoundException();
         }
