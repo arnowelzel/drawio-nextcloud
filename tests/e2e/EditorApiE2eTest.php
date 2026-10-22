@@ -89,6 +89,49 @@ final class EditorApiE2eTest extends E2ETestCase {
         $this->assertStringNotContainsString('must-not-win', $reload['xml']);
     }
 
+    /**
+     * The random key that encrypts the realtime messages of a diagram in the
+     * editor: a file has none until its first save, which creates the key and
+     * returns it, and then load, getFileInfo and later saves return the same key.
+     */
+    public function testFirstSaveCreatesTheChannelKey(): void {
+        $name = 'E2E-channel-key-' . uniqid() . '.drawio';
+        self::davPut($name, '<mxfile>initial</mxfile>');
+        $fileId = self::davStat($name)['fileid'];
+        $query = ['query' => ['fileId' => $fileId, 'shareToken' => '']];
+
+        $load = self::decodeJson((string)self::apiClient()->get('/index.php/apps/drawio/ajax/load', $query)->getBody());
+        $this->assertArrayNotHasKey('key', $load);
+
+        $save = self::decodeJson((string)self::apiClient()->put('/index.php/apps/drawio/ajax/save', [
+            'json' => [
+                'fileId' => (string)$fileId,
+                'shareToken' => '',
+                'fileContents' => '<mxfile>version-2</mxfile>',
+                'etag' => $load['etag'],
+            ],
+        ])->getBody());
+        $key = $save['key'] ?? '';
+        $this->assertMatchesRegularExpression('/^[0-9A-Za-z_-]{32}$/', $key);
+
+        $reload = self::decodeJson((string)self::apiClient()->get('/index.php/apps/drawio/ajax/load', $query)->getBody());
+        $this->assertSame($key, $reload['key']);
+        $this->assertStringNotContainsString($key, $reload['xml']);
+
+        $info = self::decodeJson((string)self::apiClient()->get('/index.php/apps/drawio/ajax/getFileInfo', $query)->getBody());
+        $this->assertSame($key, $info['key']);
+
+        $second = self::decodeJson((string)self::apiClient()->put('/index.php/apps/drawio/ajax/save', [
+            'json' => [
+                'fileId' => (string)$fileId,
+                'shareToken' => '',
+                'fileContents' => '<mxfile>version-3</mxfile>',
+                'etag' => $reload['etag'],
+            ],
+        ])->getBody());
+        $this->assertSame($key, $second['key']);
+    }
+
     public function testSaveWithoutEtagComplainsAboutEtag(): void {
         $response = self::apiClient()->put('/index.php/apps/drawio/ajax/save', [
             'json' => [
