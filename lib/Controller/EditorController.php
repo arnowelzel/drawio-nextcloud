@@ -475,7 +475,11 @@ class EditorController extends Controller
         if ("auto" === $lang) {
             $lang = $this->l10nFactory->findLanguage();
 
-            if (!empty($lang) && strpos($lang, "_")) {
+            if (in_array($lang, ["zh_TW", "zh_HK", "zh_MO", "zh_Hant"])) {
+                $lang = "zh-tw";
+            } elseif ($lang === "pt_BR") {
+                $lang = "pt-br";
+            } elseif (!empty($lang) && strpos($lang, "_")) {
                 $lang = substr($lang, 0, strpos($lang, "_")); // Change to draw.io format
             }
         }
