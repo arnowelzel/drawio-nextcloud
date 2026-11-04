@@ -2,6 +2,7 @@
 
 ## 4.3.10
 
+- Fix outdated frontend packages
 - Skip the full filecache scan on app updates (thanks to T0mWz)
 
 ## 4.3.9
