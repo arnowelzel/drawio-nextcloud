@@ -1,5 +1,9 @@
 # Change Log
 
+## 4.3.10
+
+- Skip the full filecache scan on app updates (thanks to T0mWz)
+
 ## 4.3.9
 
 - Update compatibility information for Nextcloud 35
