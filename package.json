@@ -21,7 +21,7 @@
         "@nextcloud/l10n": "^3.2.0",
         "@nextcloud/router": "^3.0.1",
         "@nextcloud/sharing": "^0.4.0",
-        "@nextcloud/vue": "^9.10.0",
+        "@nextcloud/vue": "^9.13.0",
         "jquery": "^3.7.0",
         "path": "^0.12.7",
         "process": "^0.11.10",
@@ -30,9 +30,9 @@
     "devDependencies": {
         "css-loader": "^7.1.4",
         "sass": "^1.103.1",
-        "sass-loader": "^17.0.0",
+        "sass-loader": "^17.0.1",
         "style-loader": "^3.3.3",
         "webpack": "^5.98.0",
-        "webpack-cli": "^7.2.2"
+        "webpack-cli": "^7.2.3"
     }
 }

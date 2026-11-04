@@ -51,7 +51,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ocp-branch: ['stable33', 'stable34']
+# Note: unfortunately, stable34 introduced a deprecation which is not relevant
+# for Nextcloud 34, but only Nextcloud 36 and above. However the suggested replacement
+# does not exist for Nextcloud 34 or 35, so we must disable stable34 until this is fixed
+#
+# Also see https://github.com/nextcloud/server/blob/master/lib/public/FilesMetadata/IFilesMetadataManager.php#L59-L82
+        ocp-branch: ['stable33']
+#        ocp-branch: ['stable33', 'stable34']
     name: psalm (nextcloud/ocp ${{ matrix.ocp-branch }})
     steps:
       - uses: actions/checkout@v4
