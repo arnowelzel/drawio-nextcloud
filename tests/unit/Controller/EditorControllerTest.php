@@ -23,6 +23,7 @@ use OCP\Files\IAppData;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
 use OCP\Files\SimpleFS\ISimpleFolder;
+use OCP\FilesMetadata\IFilesMetadataManager;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -54,6 +55,7 @@ final class EditorControllerTest extends TestCase {
     private IAppData&MockObject $appData;
     private IConfig&MockObject $ncConfig;
     private IL10NFactory&MockObject $l10nFactory;
+    private IFilesMetadataManager&MockObject $metadataManager;
     private ?IVersionManager $versionManager = null;
 
     protected function setUp(): void {
@@ -72,6 +74,7 @@ final class EditorControllerTest extends TestCase {
         $this->appData = $this->createMock(IAppData::class);
         $this->ncConfig = $this->createMock(IConfig::class);
         $this->l10nFactory = $this->createMock(IL10NFactory::class);
+        $this->metadataManager = $this->createMock(IFilesMetadataManager::class);
         $this->versionManager = null;
 
         $this->ncConfig->method('getSystemValueString')->willReturn('instance123');
@@ -96,6 +99,7 @@ final class EditorControllerTest extends TestCase {
             $this->appData,
             $this->ncConfig,
             $this->l10nFactory,
+            $this->metadataManager,
             $this->versionManager
         );
     }

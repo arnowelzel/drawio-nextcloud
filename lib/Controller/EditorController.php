@@ -27,6 +27,8 @@ use OCP\Files\IAppData;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
+use OCP\FilesMetadata\Exceptions\FilesMetadataNotFoundException;
+use OCP\FilesMetadata\IFilesMetadataManager;
 use OCP\HintException;
 use OCP\IConfig;
 use OCP\IL10N;
@@ -43,6 +45,12 @@ use Psr\Log\LoggerInterface;
 
 class EditorController extends Controller
 {
+    /**
+     * Metadata key of the random key that encrypts the realtime messages of a
+     * diagram in the editor (plugins/nextcloud.js in draw.io).
+     */
+    private const CHANNEL_KEY_METADATA = 'drawio-channel-key';
+
     public function __construct(
         IRequest $request,
         private IRootFolder $root,
@@ -58,6 +66,7 @@ class EditorController extends Controller
         protected IAppData $appData,
         private IConfig $ncConfig,
         private IL10NFactory $l10nFactory,
+        private IFilesMetadataManager $metadataManager,
         private ?IVersionManager $versionManager = null
     )
     {
@@ -187,7 +196,7 @@ class EditorController extends Controller
                         'versionsEnabled' => empty($shareToken) && isset($this->versionManager),
                         'ver' => 2,
                         'instanceId' => $this->ncConfig->getSystemValueString('instanceid', '')
-                    ],
+                    ] + $this->getChannelKeyInfo($fileId),
                     Http::STATUS_OK
                 );
             } else {
@@ -243,7 +252,7 @@ class EditorController extends Controller
                     'versionsEnabled' => empty($shareToken) && isset($this->versionManager),
                     'ver' => 2,
                     'instanceId' => $this->ncConfig->getSystemValueString('instanceid', '')
-                ],
+                ] + $this->getChannelKeyInfo($file->getId()),
                 Http::STATUS_OK
             );
         } catch (BadRequestException $e) {
@@ -311,7 +320,8 @@ class EditorController extends Controller
                                     ['app' => $this->appName, 'exception' => $e]);
                                 $newSize = $file->getSize();
                                 $newMtime = $file->getMTime();
-                                return new DataResponse(['etag' => $newEtag, 'size' => $newSize, 'mtime' => $newMtime], Http::STATUS_OK);
+                                return new DataResponse(['etag' => $newEtag, 'size' => $newSize, 'mtime' => $newMtime]
+                                    + $this->getChannelKeyInfo($fileId, true), Http::STATUS_OK);
                             }
                             throw $e;
                         }
@@ -321,6 +331,8 @@ class EditorController extends Controller
                         $newEtag = $file->getEtag();
                         $newSize = $file->getSize();
                         $newMtime = $file->getMTime();
+                        // Files from before channel keys get one with their next save
+                        $keyInfo = $this->getChannelKeyInfo($fileId, true);
 					} catch (LockedException $e) {
 						$message = $this->trans->t('The file is locked.');
 						return new DataResponse(['message' => $message], Http::STATUS_CONFLICT);
@@ -334,7 +346,7 @@ class EditorController extends Controller
                         }
                     }
 
-					return new DataResponse(['etag' => $newEtag, 'size' => $newSize, 'mtime' => $newMtime], Http::STATUS_OK);
+					return new DataResponse(['etag' => $newEtag, 'size' => $newSize, 'mtime' => $newMtime] + $keyInfo, Http::STATUS_OK);
 				} else {
 					// Not writeable!
 					$this->logger->error('User does not have permission to write to file: ' . $fileId . ', ' . $shareToken,
@@ -579,6 +591,45 @@ class EditorController extends Controller
         }
 
         return $file;
+    }
+
+    /**
+     * Returns ['key' => key] with the random key that encrypts the realtime
+     * messages of the given file in the editor, or an empty array if the file
+     * has none. With $create, a file without a key gets one. The editor falls
+     * back to a key derived from the instance and file IDs, which anyone who
+     * knows the realtime channel can compute.
+     *
+     * The key is stored in the file metadata, not in the content, so downloads
+     * and copies of the file do not carry it. Anyone who can read the file gets
+     * the key, like the content.
+     */
+    private function getChannelKeyInfo(int $fileId, bool $create = false): array
+    {
+        try {
+            $metadata = $this->metadataManager->getMetadata($fileId, $create);
+
+            if ($create && !$metadata->hasKey(self::CHANNEL_KEY_METADATA)) {
+                // 32 characters of base64url
+                $metadata->setString(self::CHANNEL_KEY_METADATA,
+                    rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '='));
+                $this->metadataManager->saveMetadata($metadata);
+
+                // Reads the stored key, as a concurrent save can have stored another one
+                $metadata = $this->metadataManager->getMetadata($fileId);
+            }
+
+            if ($metadata->hasKey(self::CHANNEL_KEY_METADATA)) {
+                return ['key' => $metadata->getString(self::CHANNEL_KEY_METADATA)];
+            }
+        } catch (FilesMetadataNotFoundException $e) {
+            // The file has no metadata, so it has no key
+        } catch (\Exception $e) {
+            $this->logger->warning('Can\'t get the channel key: ' . $e->getMessage(),
+                ['app' => $this->appName, 'exception' => $e]);
+        }
+
+        return [];
     }
 
     private function getFile($fileId, $shareToken): array
