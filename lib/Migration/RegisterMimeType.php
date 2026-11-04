@@ -12,11 +12,16 @@ class RegisterMimeType extends MimeTypeMigration
 
     private function registerForExistingFiles(): void
     {
-        $mimeTypeId = $this->mimeTypeLoader->getId('application/x-drawio');
-        $this->mimeTypeLoader->updateFilecache('drawio', $mimeTypeId);
-
-        $mimeTypeId = $this->mimeTypeLoader->getId('application/x-drawio-wb');
-        $this->mimeTypeLoader->updateFilecache('dwb', $mimeTypeId);
+        foreach (['drawio' => 'application/x-drawio', 'dwb' => 'application/x-drawio-wb'] as $ext => $mimeType) {
+            // Updating the filecache requires a full table scan, so only do it when the
+            // mime type is not registered yet. To force a re-scan, run:
+            // occ maintenance:mimetype:update-db --repair-filecache
+            if ($this->mimeTypeLoader->exists($mimeType)) {
+                continue;
+            }
+            $mimeTypeId = $this->mimeTypeLoader->getId($mimeType);
+            $this->mimeTypeLoader->updateFilecache($ext, $mimeTypeId);
+        }
     }
 
     private function registerForNewFiles(): void
