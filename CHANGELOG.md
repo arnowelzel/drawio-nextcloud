@@ -4,6 +4,7 @@
 
 - Fix outdated frontend packages
 - Skip the full filecache scan on app updates (thanks to T0mWz)
+- Add a random realtime channel key for diagrams to close a weakness in realtime collaboration (thanks to alderg)
 
 ## 4.3.9
 
