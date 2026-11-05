@@ -138,6 +138,13 @@ abstract class E2ETestCase extends TestCase {
         return $response->getStatusCode();
     }
 
+    protected static function davMkcol(string $path): int {
+        self::$cleanupPaths[] = $path;
+        $response = self::apiClient()->request('MKCOL',
+            '/remote.php/dav/files/' . self::$adminUser . '/' . ltrim($path, '/'));
+        return $response->getStatusCode();
+    }
+
     /**
      * @return array{fileid: int, contenttype: string}
      */
