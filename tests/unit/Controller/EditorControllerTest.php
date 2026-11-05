@@ -617,7 +617,7 @@ final class EditorControllerTest extends TestCase {
         $params = $response->getParams();
         $this->assertSame('https://draw.example.com/editor', $params['drawioUrl']);
         $this->assertSame('custom=1', $params['drawioUrlArgs']);
-        $this->assertSame('pt', $params['drawioLang']);
+        $this->assertSame('pt-br', $params['drawioLang']);
         $this->assertSame('97', $params['fileId']);
 
         $policy = $response->getContentSecurityPolicy()->buildPolicy();
