@@ -1,5 +1,9 @@
 # Change Log
 
+## 4.3.11
+
+- Fix auto language for traditional Chinese and Brazilian Portuguese (thanks to louis378)
+
 ## 4.3.10
 
 - Fix outdated frontend packages
